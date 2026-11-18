@@ -463,14 +463,44 @@ class OsintHubApp {
     const currentWf = WORKFLOWS.find(w => w.id === this.state.activeWorkflow) || WORKFLOWS[0];
     this.dom.workflowSelect.value = currentWf.id;
 
-    this.dom.workflowStepsList.innerHTML = currentWf.steps.map(step => `
-      <div class="workflow-step-row">
-        <span class="step-num-badge">${step.step}</span>
-        <div class="step-content">
-          <strong>${step.name}:</strong> <span>${step.action}</span>
+    this.dom.workflowStepsList.innerHTML = currentWf.steps.map(step => {
+      const tool = OSINT_TOOLS.find(t => t.id === step.toolId);
+      const toolUrl = tool ? tool.url : "#";
+
+      return `
+        <div class="workflow-step-row" data-step-tool-id="${step.toolId}">
+          <div class="step-main">
+            <span class="step-num-badge">${step.step}</span>
+            <div class="step-content">
+              <a href="${toolUrl}" target="_blank" rel="noopener noreferrer" class="workflow-tool-link" title="Abrir sitio oficial de ${step.name}">
+                <strong>${step.name}</strong>
+                <span class="step-ext-arrow">↗</span>
+              </a>
+              <span class="step-action-desc">${step.action}</span>
+            </div>
+          </div>
+          <div class="step-actions">
+            <a href="${toolUrl}" target="_blank" rel="noopener noreferrer" class="btn-step-open" title="Abrir sitio oficial de ${step.name}">
+              <span>Abrir</span>
+              <span>↗</span>
+            </a>
+            ${tool ? `<button class="btn-step-info" data-step-info-id="${step.toolId}" title="Ver expediente de ${step.name}">ℹ</button>` : ""}
+          </div>
         </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
+
+    // Conectar eventos de modal de detalle para los botones de información en los pasos
+    this.dom.workflowStepsList.querySelectorAll("[data-step-info-id]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const toolId = btn.dataset.stepInfoId;
+        const tool = OSINT_TOOLS.find(t => t.id === toolId);
+        if (tool) {
+          this.openDetailModal(tool);
+        }
+      });
+    });
   }
 
   // ==================== MODALES ====================
