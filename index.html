@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Hub en Español | Directorio de Inteligencia de Fuentes Abiertas</title>
+    <meta name="description" content="Directorio profesional y rápido de herramientas OSINT en español con filtros por coste, búsqueda instantánea, tips de uso y enlaces verificados.">
+    <!-- Favicon SVG -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%2232%22%20height=%2232%22><text y=%2224%22 font-size=%2222%22>🔍</text></svg>">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        }
+        code, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased flex flex-col selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- BARRA SUPERIOR DE AVISO / ESTADÍSTICAS -->
+    <aside class="bg-blue-600 text-white text-xs py-1.5 px-4 font-medium">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <span class="flex items-center gap-1.5">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                <span>Directorio OSINT profesional 100% en español &bull; Optimizado para velocidad y trabajo táctico</span>
+            </span>
+            <div class="flex items-center gap-4 text-blue-100 text-xs">
+                <span id="header-tools-count">Cargando herramientas...</span>
+                <span>Presiona <kbd class="px-1.5 py-0.5 bg-blue-700 rounded text-[11px] font-mono text-white border border-blue-500">/</kbd> para buscar</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- HEADER PRINCIPAL -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs backdrop-blur-md bg-white/95">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- Logotipo e Identidad -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 text-xl font-bold">
+                        🔍
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl font-bold tracking-tight text-slate-900">OSINT Hub <span class="text-xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-semibold uppercase tracking-wider">Español</span></h1>
+                        </div>
+                        <p class="text-xs text-slate-500">Herramientas de investigación en fuentes abiertas organizadas, concisas y prácticas</p>
+                    </div>
+                </div>
+
+                <!-- Barra de búsqueda rápida -->
+                <div class="flex-1 max-w-xl relative">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" id="global-search" placeholder="Buscar por herramienta, función, objetivo (ej. email, satélite, IP, personas)..." 
+                            class="w-full pl-10 pr-20 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            autocomplete="off">
+                        <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1.5">
+                            <button id="clear-search-btn" class="hidden text-slate-400 hover:text-slate-600 p-1" title="Limpiar búsqueda">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                            <span class="text-[11px] font-mono px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded border border-slate-300 font-medium">/</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones Rápidos (Favoritos + Lanzador Rápido) -->
+                <div class="flex items-center gap-2">
+                    <button id="btn-toggle-favorites" onclick="toggleFavoritesFilter()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs">
+                        <span class="text-amber-500 text-sm">★</span>
+                        <span>Favoritos</span>
+                        <span id="favorites-badge-count" class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="openInvestigatorModal()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition cursor-pointer shadow-xs shadow-blue-500/20">
+                        <span>⚡ Lanzador Directo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CUERPO PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+        <!-- 1. CATEGORÍAS (PILLS PRINCIPALES) -->
+        <section class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Categorías de Investigación</h2>
+                <span id="active-category-indicator" class="text-xs font-semibold text-blue-600">Mostrando todas</span>
+            </div>
+            <div id="category-pills" class="flex flex-wrap gap-2">
+                <!-- Se llena dinámicamente con JS -->
+            </div>
+        </section>
+
+        <!-- 2. FILTROS DE COSTE Y ORDEN -->
+        <section class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Coste:</span>
+                <div id="cost-filters" class="flex flex-wrap gap-1.5">
+                    <button onclick="setCostFilter('todos')" class="cost-btn active text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer bg-slate-900 text-white border-slate-900" data-cost="todos">
+                        Todos
+                    </button>
+                    <button onclick="setCostFilter('Gratis')" class="cost-btn text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer bg-slate-50 text-emerald-700 border-slate-200 hover:bg-emerald-50 hover:border-emerald-300" data-cost="Gratis">
+                        🟢 Gratis
+                    </button>
+                    <button onclick="setCostFilter('Freemium')" class="cost-btn text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer bg-slate-50 text-blue-700 border-slate-200 hover:bg-blue-50 hover:border-blue-300" data-cost="Freemium">
+                        🔵 Freemium
+                    </button>
+                    <button onclick="setCostFilter('De pago')" class="cost-btn text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer bg-slate-50 text-amber-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300" data-cost="De pago">
+                        🟠 De pago
+                    </button>
+                    <button onclick="setCostFilter('Open Source')" class="cost-btn text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer bg-slate-50 text-purple-700 border-slate-200 hover:bg-purple-50 hover:border-purple-300" data-cost="Open Source">
+                        🟣 Open Source
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contador de resultados y reset -->
+            <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span id="results-count" class="font-medium"></span>
+                <button id="reset-filters-btn" onclick="resetAllFilters()" class="hidden text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer">
+                    Restablecer filtros
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. GRID DE HERRAMIENTAS -->
+        <section>
+            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: LANZADOR DIRECTO DE INVESTIGACIÓN RÁPIDA -->
+    <div id="investigator-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
+            <button onclick="closeInvestigatorModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-lg p-1.5 rounded-lg">✕</button>
+            
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold">⚡</div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Lanzador Rápido de Consultas OSINT</h3>
+                    <p class="text-xs text-slate-500">Ingresa un dato objetivo y abre directamente las mejores herramientas con la búsqueda lista.</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo de Consulta:</label>
+                    <select id="quick-query-type" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="username">👤 Nombre de Usuario / Nickname (redes sociales y perfiles)</option>
+                        <option value="domain">🌐 Dominio / Sitio Web (DNS, certificados, Whois, malware)</option>
+                        <option value="ip">🛰️ Dirección IP (Geolocalización, puertos, Shodan)</option>
+                        <option value="email">✉️ Correo Electrónico (Brechas de seguridad, leaks)</option>
+                        <option value="phone">📞 Número de Teléfono (Identificación de operador y país)</option>
+                        <option value="dork">🔎 Google Dork (Documentos confidenciales, archivos indexados)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Dato Objetivo (Target):</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="quick-target-input" placeholder="Ejemplo: nombre_usuario, 8.8.8.8, o target.com" 
+                            class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button onclick="executeQuickSearch()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                            Lanzar Búsquedas
+                        </button>
+                    </div>
+                </div>
+
+                <div id="quick-search-targets-list" class="pt-3 border-t border-slate-100">
+                    <p class="text-xs font-semibold text-slate-500 mb-2">Herramientas que se ejecutarán según tu consulta:</p>
+                    <div id="quick-tool-links" class="flex flex-wrap gap-2 text-xs">
+                        <span class="text-slate-400 italic">Escribe un término arriba y haz clic en "Lanzar Búsquedas" o abre cualquiera de las sugerencias.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-8 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800 text-sm">Directorio OSINT</span>
+                <span>&bull; Diseñado para analistas, periodistas e investigadores de ciberseguridad</span>
+            </div>
+            <div class="flex items-center gap-4 text-slate-600 font-medium">
+                <span>Totalmente en Español</span>
+                <span>&bull;</span>
+                <span>Optimizado para Vercel</span>
+                <span>&bull;</span>
+                <a href="#top" class="text-blue-600 hover:underline">↑ Volver arriba</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- NOTIFICACIÓN TOAST -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-xl border border-slate-700 flex items-center gap-2 transition-opacity duration-200 opacity-0 pointer-events-none">
+        <span id="toast-icon">✓</span>
+        <span id="toast-message">Copiado al portapapeles</span>
+    </div>
+
+    <!-- SCRIPT DE DATOS Y LÓGICA -->
+    <script>
+        // BASE DE DATOS OSINT EXTENSA EN ESPAÑOL
+        // Cada entrada tiene explicaciones claras, sin residuos de texto y con tips tácticos de uso.
+        const OSINT_DATA = [
+            // --- CONTACTO Y DESECHABLES ---
+            {
+                id: "10minmail",
+                nombre: "10 Minute Mail",
+                url: "https://10minutemail.com/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "Gratis",
+                desc: "Genera una dirección de correo temporal que se autodestruye automáticamente tras 10 minutos.",
+                tip: "Ideal para registrarse en servicios sospechosos o de un solo uso sin exponer la identidad ni recibir spam.",
+                tags: ["email", "correo temporal", "desechable", "anonimato", "buzón"]
+            },
+            {
+                id: "onlinesim",
+                nombre: "OnlineSIM",
+                url: "https://onlinesim.net/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "Freemium",
+                desc: "Recepción de SMS de verificación mediante números virtuales de más de 30 países.",
+                tip: "Permite eludir verificaciones de 2 pasos por SMS sin asociar tu número personal de teléfono.",
+                tags: ["sms", "número virtual", "teléfono", "verificación", "2fa"]
+            },
+            {
+                id: "simplelogin",
+                nombre: "SimpleLogin",
+                url: "https://simplelogin.io/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "Freemium",
+                desc: "Crea alias de correo electrónico que reenvían los mensajes a tu buzón real preservando el anonimato.",
+                tip: "Propiedad de Proton. Muy útil para categorizar investigaciones creando un alias único por cada caso.",
+                tags: ["alias", "email forwarding", "privacidad", "proton", "correo"]
+            },
+            {
+                id: "anonaddy",
+                nombre: "Addy.io (AnonAddy)",
+                url: "https://addy.io/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "Freemium",
+                desc: "Gestor de alias de correo de código abierto para proteger direcciones reales.",
+                tip: "Soporta dominios propios y cifrado PGP para recibir los correos reenviados ya cifrados.",
+                tags: ["alias", "open source", "pgp", "correo", "privacidad"]
+            },
+            {
+                id: "maildrop",
+                nombre: "MailDrop",
+                url: "https://maildrop.cc/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "Gratis",
+                desc: "Bandeja de entrada pública y rápida sin contraseña para recibir confirmaciones inmediatas.",
+                tip: "No uses esta herramienta para datos sensibles: cualquiera que conozca la dirección puede leer la bandeja.",
+                tags: ["email rápido", "sin registro", "buzón público"]
+            },
+            {
+                id: "smstome",
+                nombre: "SMS To Me",
+                url: "https://smstome.com/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "Gratis",
+                desc: "Números telefónicos públicos internacionales para recibir mensajes SMS de confirmación.",
+                tip: "Los SMS son visibles por cualquier persona que consulte la página; úsalo solo para cuentas secundarias.",
+                tags: ["sms gratis", "número temporal", "teléfono público"]
+            },
+            {
+                id: "faxzero",
+                nombre: "FaxZero",
+                url: "https://faxzero.com/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "Gratis",
+                desc: "Servicio online para enviar faxes de manera gratuita y rápida a EE. UU. y Canadá.",
+                tip: "Útil para solicitudes de información oficial a organismos estatales que aún exigen fax.",
+                tags: ["fax", "comunicaciones", "documentos"]
+            },
+            {
+                id: "twilio",
+                nombre: "Twilio",
+                url: "https://www.twilio.com/",
+                categoria: "contacto",
+                categoriaNombre: "Contacto Desechable",
+                coste: "De pago",
+                desc: "Infraestructura API para adquisición y programación de líneas telefónicas, SMS y voz a escala global.",
+                tip: "Permite automatizar campañas de llamadas o recepción masiva de mensajes durante investigaciones complejas.",
+                tags: ["api", "telefonía", "sms", "automatización", "programación"]
+            },
+
+            // --- IDENTIDADES Y AVATARES ---
+            {
+                id: "fakenamegen",
+                nombre: "Fake Name Generator",
+                url: "https://www.fakenamegenerator.com/",
+                categoria: "generadores",
+                categoriaNombre: "Identidades y Avatares",
+                coste: "Gratis",
+                desc: "Genera identidades falsas completas: nombre, dirección real del país elegido, tarjeta de prueba y teléfono.",
+                tip: "Excelente para crear perfiles sockpuppet creíbles con datos de coherencia geográfica.",
+                tags: ["identidad falsa", "sockpuppet", "dirección simulada", "persona ficticia"]
+            },
+            {
+                id: "thispersondoesnotexist",
+                nombre: "This Person Does Not Exist",
+                url: "https://thispersondoesnotexist.com/",
+                categoria: "generadores",
+                categoriaNombre: "Identidades y Avatares",
+                coste: "Gratis",
+                desc: "Genera rostros humanos fotorrealistas mediante redes neuronales StyleGAN.",
+                tip: "Recorta ligeramente la imagen generada o altera tonos para evitar coincidencias fáciles de artefactos de IA en fondos.",
+                tags: ["ia", "rostro falso", "avatar", "stylegan", "deepfake"]
+            },
+            {
+                id: "usernamegenerator",
+                nombre: "LastPass Username Generator",
+                url: "https://www.lastpass.com/features/username-generator",
+                categoria: "generadores",
+                categoriaNombre: "Identidades y Avatares",
+                coste: "Gratis",
+                desc: "Generador de nombres de usuario creíbles, aleatorios o memorables para nuevas cuentas.",
+                tip: "Evita reutilizar nombres o patrones personales en cuentas de investigación encubierta.",
+                tags: ["username", "nickname", "alias", "generador"]
+            },
+            {
+                id: "thisresumedoesnotexist",
+                nombre: "This Resume Does Not Exist",
+                url: "https://thisresumedoesnotexist.com/",
+                categoria: "generadores",
+                categoriaNombre: "Identidades y Avatares",
+                coste: "Gratis",
+                desc: "Plantillas e historiales de currículum vitae ficticios creados automáticamente con IA.",
+                tip: "Sirve para enriquecer cuentas ficticias en redes profesionales como LinkedIn.",
+                tags: ["curriculum", "ia", "historial laboral", "cv falso"]
+            },
+            {
+                id: "fakecardgen",
+                nombre: "Credit Card Generator & Validator",
+                url: "https://www.fakenamegenerator.com/credit-card-validator.php",
+                categoria: "generadores",
+                categoriaNombre: "Identidades y Avatares",
+                coste: "Gratis",
+                desc: "Genera secuencias numéricas que superan el algoritmo Luhn para pruebas de formularios.",
+                tip: "Útil únicamente para saltar formularios que requieren un número con formato válido para registrarse.",
+                tags: ["luhn", "tarjetas prueba", "formulario"]
+            },
+            {
+                id: "fakeinfonet",
+                nombre: "FakeInfo Profile Generator",
+                url: "https://fakeinfo.net/",
+                categoria: "generadores",
+                categoriaNombre: "Identidades y Avatares",
+                coste: "Gratis",
+                desc: "Simulador de perfiles completos para redes sociales (Twitter, Instagram, TikTok y YouTube).",
+                tip: "Permite generar capturas de pantalla simuladas o estructurar personalidades para análisis de impacto.",
+                tags: ["redes sociales", "perfil simulado", "mockup"]
+            },
+
+            // --- PERSONAS Y REDES SOCIALES ---
+            {
+                id: "usersearch",
+                nombre: "UserSearch.org",
+                url: "https://usersearch.org/",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Gratis",
+                desc: "Rastrea la presencia de un nombre de usuario en cientos de foros, redes de citas y plataformas de streaming.",
+                tip: "Ingresa el nickname del objetivo para mapear en qué plataformas está o ha estado activo.",
+                tags: ["username", "nickname", "redes sociales", "huella digital"]
+            },
+            {
+                id: "whatsmyname",
+                nombre: "WhatsMyName App",
+                url: "https://whatsmyname.app/",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Open Source",
+                desc: "Herramienta líder de enumeración de nombres de usuario en más de 600 sitios web en segundos.",
+                tip: "Uno de los estándares de la comunidad OSINT por su precisión y bajo número de falsos positivos.",
+                tags: ["username", "open source", "investigacion", "perfiles"]
+            },
+            {
+                id: "webmii",
+                nombre: "WebMii",
+                url: "https://webmii.com/",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Freemium",
+                desc: "Motor de búsqueda de personas en la web abierta con índice de visibilidad y palabras clave asociadas.",
+                tip: "Brinda enlaces directos a noticias, perfiles sociales y fotografías relacionadas con el nombre del objetivo.",
+                tags: ["personas", "huella digital", "visibilidad", "búsqueda web"]
+            },
+            {
+                id: "idcrawl",
+                nombre: "IDCrawl",
+                url: "https://www.idcrawl.com/",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Gratis",
+                desc: "Buscador de personas en redes sociales públicas, correos y números telefónicos.",
+                tip: "Especialmente efectivo para localizar cuentas cruzadas de una persona en múltiples redes.",
+                tags: ["personas", "redes sociales", "registros públicos"]
+            },
+            {
+                id: "truepeoplesearch",
+                nombre: "TruePeopleSearch",
+                url: "https://www.truepeoplesearch.com/",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Gratis",
+                desc: "Directorio de búsqueda profunda de personas, familiares asociados, domicilios y teléfonos en EE. UU.",
+                tip: "Requiere VPN si consultas desde fuera de EE. UU. Muy completo para localizar direcciones históricas.",
+                tags: ["personas", "eeuu", "direcciones", "familiares", "teléfonos"]
+            },
+            {
+                id: "fastpeoplesearch",
+                nombre: "FastPeopleSearch",
+                url: "https://fastpeoplesearch.com/",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Gratis",
+                desc: "Localizador ultra veloz de números de teléfono, correos y registros de domicilio para objetivos en EE. UU.",
+                tip: "Permite búsquedas inversas a partir de un número telefónico o una dirección postal.",
+                tags: ["telefono inverso", "personas", "registros"]
+            },
+            {
+                id: "yandexpeople",
+                nombre: "Yandex People Search",
+                url: "https://yandex.ru/people",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Gratis",
+                desc: "Buscador de personas de Yandex enfocado en redes de Europa del Este (VKontakte, Odnoklassniki).",
+                tip: "Insuperable si la persona investigada tiene vínculos con Rusia, Ucrania, Bielorrusia o Asia Central.",
+                tags: ["yandex", "vk", "europa del este", "personas"]
+            },
+            {
+                id: "familytreenow",
+                nombre: "FamilyTreeNow",
+                url: "https://www.familytreenow.com/",
+                categoria: "personas",
+                categoriaNombre: "Personas y Redes",
+                coste: "Freemium",
+                desc: "Genealogía y relaciones de parentesco a partir de registros de censo y defunciones públicas.",
+                tip: "Permite establecer árboles genealógicos y confirmar lazos familiares entre sospechosos.",
+                tags: ["genealogía", "familia", "censo", "registros"]
+            },
+
+            // --- BÚSQUEDA UNIFICADA Y CIBERAMENAZAS ---
+            {
+                id: "criminalip",
+                nombre: "Criminal IP",
+                url: "https://www.criminalip.io/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Freemium",
+                desc: "Motor de búsqueda de ciberinteligencia para auditar IPs maliciosas, dominios phishing y puertos abiertos.",
+                tip: "Muestra la puntuación de riesgo reputacional y vulnerabilidades CVE detectadas en la IP objetivo.",
+                tags: ["ip", "amenazas", "phishing", "ciberseguridad", "cve"]
+            },
+            {
+                id: "virustotal",
+                nombre: "VirusTotal",
+                url: "https://www.virustotal.com/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Gratis",
+                desc: "Analiza archivos, dominios, IPs y URLs contra más de 70 motores antivirus y feeds de inteligencia.",
+                tip: "Revisa la pestaña 'Relations' y 'Community' para encontrar muestras asociadas o dominios hermanos.",
+                tags: ["antivirus", "malware", "hashes", "dominios", "ips"]
+            },
+            {
+                id: "urlscan",
+                nombre: "urlscan.io",
+                url: "https://urlscan.io/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Freemium",
+                desc: "Escáner y sandbox web que captura capturas de pantalla, peticiones HTTP, cookies y scripts de cualquier URL.",
+                tip: "Revisa los escaneos públicos de otros analistas para descubrir paneles de phishing o credenciales expuestas.",
+                tags: ["sandbox", "captura web", "scripts", "phishing", "cookies"]
+            },
+            {
+                id: "metadefender",
+                nombre: "OPSWAT MetaDefender",
+                url: "https://metadefender.opswat.com/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Freemium",
+                desc: "Plataforma de análisis multiescáner para detectar archivos maliciosos y reputación de infraestructura.",
+                tip: "Permite aplicar desinfección profunda (Deep CDR) sobre documentos sospechosos.",
+                tags: ["cdr", "malware", "inspeccion archivos", "ip"]
+            },
+            {
+                id: "synapsint",
+                nombre: "SynapsInt",
+                url: "https://synapsint.com/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Gratis",
+                desc: "Suite unificada que recolecta datos OSINT de múltiples APIs para un dominio o dirección IP.",
+                tip: "Ahorra tiempo consolidando información de Shodan, AlienVault, Whois y registros DNS en un solo informe.",
+                tags: ["suite", "automatizacion", "dns", "whois", "shodan"]
+            },
+            {
+                id: "inteltechniques",
+                nombre: "IntelTechniques Tools (Michael Bazzell)",
+                url: "https://inteltechniques.com/tools/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Gratis",
+                desc: "Formularios de búsqueda estructurada creados por Michael Bazzell para redes, vehículos, teléfonos y correos.",
+                tip: "La biblia del investigador OSINT. Te da la sintaxis exacta de consulta para cada objetivo.",
+                tags: ["bazzell", "tecnicas", "formularios", "metodologia"]
+            },
+            {
+                id: "censys",
+                nombre: "Censys Search",
+                url: "https://search.censys.io/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Freemium",
+                desc: "Motor de búsqueda de hosts de Internet y certificados SSL/TLS con detalle de huellas digitales.",
+                tip: "Ideal para encontrar servidores de origen (Origin IPs) que se esconden detrás de Cloudflare mediante el certificado SSL.",
+                tags: ["certificados", "ssl", "hosts", "cloudflare bypass", "infraestructura"]
+            },
+            {
+                id: "crtsh",
+                nombre: "crt.sh (Certificate Search)",
+                url: "https://crt.sh/",
+                categoria: "unificada",
+                categoriaNombre: "Ciberamenazas e Infraestructura",
+                coste: "Open Source",
+                desc: "Buscador de Certificate Transparency (CT logs) para descubrir subdominios ocultos de una empresa.",
+                tip: "Escribe '%.dominio.com' para encontrar todos los subdominios que hayan emitido un certificado SSL.",
+                tags: ["subdominios", "certificados", "ct logs", "enumeracion"]
+            },
+
+            // --- MOTORES DE BÚSQUEDA Y DORKS ---
+            {
+                id: "shodan",
+                nombre: "Shodan",
+                url: "https://www.shodan.io/",
+                categoria: "motores",
+                categoriaNombre: "Motores de Búsqueda",
+                coste: "Freemium",
+                desc: "El buscador líder para dispositivos conectados a Internet: routers, cámaras de seguridad, ICS y servidores.",
+                tip: "Usa filtros avanzados como 'port:443 org:Empresa' o 'has_screenshot:true' para hallar paneles expuestos.",
+                tags: ["iot", "cámaras", "servidores", "puertos", "banners"]
+            },
+            {
+                id: "searx",
+                nombre: "SearXNG / Searx",
+                url: "https://searx.space/",
+                categoria: "motores",
+                categoriaNombre: "Motores de Búsqueda",
+                coste: "Open Source",
+                desc: "Metabuscador libre que agrega resultados de más de 70 motores de búsqueda sin rastrear tu identidad.",
+                tip: "Permite consultar Google, Bing y DuckDuckGo simultáneamente sin que asocien las búsquedas a tu perfil.",
+                tags: ["metabuscador", "privacidad", "open source", "anónimo"]
+            },
+            {
+                id: "bravesearch",
+                nombre: "Brave Search",
+                url: "https://search.brave.com/",
+                categoria: "motores",
+                categoriaNombre: "Motores de Búsqueda",
+                coste: "Gratis",
+                desc: "Motor de búsqueda con índice propio 100% independiente de Google y Bing.",
+                tip: "Muestra páginas que otros motores penalizan o desindexan por motivos comerciales.",
+                tags: ["privacidad", "índice independiente", "web"]
+            },
+            {
+                id: "grayhatwarfare",
+                nombre: "Grayhat Warfare (Buckets)",
+                url: "https://buckets.grayhatwarfare.com/",
+                categoria: "motores",
+                categoriaNombre: "Motores de Búsqueda",
+                coste: "Freemium",
+                desc: "Buscador masivo de archivos expuestos en buckets públicos de Amazon AWS S3, Azure y DigitalOcean.",
+                tip: "Busca copias de seguridad de bases de datos ('backup.sql') o documentos internos de tu objetivo.",
+                tags: ["s3", "buckets", "aws", "fugas", "archivos expuestos"]
+            },
+            {
+                id: "sploitus",
+                nombre: "Sploitus",
+                url: "https://sploitus.com/",
+                categoria: "motores",
+                categoriaNombre: "Motores de Búsqueda",
+                coste: "Gratis",
+                desc: "Buscador especializado de vulnerabilidades, exploits de Exploit-DB, GitHub y herramientas de penetración.",
+                tip: "Ingresa el nombre del software objetivo y su versión para ver si existen exploits públicos.",
+                tags: ["exploits", "vulnerabilidades", "cve", "hacker"]
+            },
+            {
+                id: "googlescholar",
+                nombre: "Google Académico (Scholar)",
+                url: "https://scholar.google.es/",
+                categoria: "motores",
+                categoriaNombre: "Motores de Búsqueda",
+                coste: "Gratis",
+                desc: "Buscador de tesis doctorales, artículos científicos, patentes y publicaciones universitarias.",
+                tip: "Útil para investigar a profesionales, científicos o académicos y verificar sus coautores o afiliaciones.",
+                tags: ["investigación académica", "patentes", "papers", "universidad"]
+            },
+            {
+                id: "duckduckgo",
+                nombre: "DuckDuckGo",
+                url: "https://duckduckgo.com/",
+                categoria: "motores",
+                categoriaNombre: "Motores de Búsqueda",
+                coste: "Gratis",
+                desc: "Buscador web privado con potentes atajos rápidos de búsqueda conocidos como 'Bangs' (!w, !gh, etc.).",
+                tip: "Usa el operador 'site:' o comillas para forzar concordancia exacta sin personalización de resultados.",
+                tags: ["privacidad", "bangs", "dorks", "web"]
+            },
+
+            // --- GOOGLE CSE (BUSCADORES PERSONALIZADOS) ---
+            {
+                id: "cse_gdrive",
+                nombre: "Google Drive Folder Search",
+                url: "https://cse.google.com/cse/publicurl?cx=013991603413798772546:nwzqlcysx_w",
+                categoria: "googlecse",
+                categoriaNombre: "Google CSE",
+                coste: "Gratis",
+                desc: "Buscador personalizado de Google enfocado en carpetas y archivos compartidos públicamente en Drive.",
+                tip: "Encuentra carpetas de documentos desprotegidas por usuarios u organizaciones sin autenticación.",
+                tags: ["google drive", "archivos públicos", "carpetas", "fugas"]
+            },
+            {
+                id: "cse_invites",
+                nombre: "Chat Invites Search (Slack/Discord/Telegram)",
+                url: "https://cse.google.com/cse?cx=8e26eca532ec2cba3",
+                categoria: "googlecse",
+                categoriaNombre: "Google CSE",
+                coste: "Gratis",
+                desc: "Localiza enlaces de invitación vigentes a servidores y canales de Slack, Discord y Zoom.",
+                tip: "Permite unirse a comunidades donde se discute sobre un tema objetivo o una filtración.",
+                tags: ["slack", "discord", "zoom", "invitaciones", "chats"]
+            },
+            {
+                id: "cse_robots",
+                nombre: "Robots.txt Global Search Engine",
+                url: "https://cse.google.com/cse?cx=013991603413798772546:zu7epjqvunu",
+                categoria: "googlecse",
+                categoriaNombre: "Google CSE",
+                coste: "Gratis",
+                desc: "Motor de búsqueda que rastrea entradas en archivos robots.txt indexados por Google.",
+                tip: "Los administradores a menudo deshabilitan rutas sensibles en robots.txt (/admin, /backup), revelándolas aquí.",
+                tags: ["robots.txt", "rutas secretas", "directorios", "crawler"]
+            },
+            {
+                id: "cse_chrome",
+                nombre: "Chrome Extension Archive Search",
+                url: "https://cse.google.com/cse/publicurl?cx=000501358716561852263:h-5uyshsclq",
+                categoria: "googlecse",
+                categoriaNombre: "Google CSE",
+                coste: "Gratis",
+                desc: "Buscador histórico de extensiones de Google Chrome y su código fuente indexado.",
+                tip: "Permite analizar extensiones maliciosas retiradas de la Chrome Web Store o encontrar autores.",
+                tags: ["chrome", "extensiones", "código", "histórico"]
+            },
+            {
+                id: "cse_aws",
+                nombre: "Amazon Cloud Search Engine",
+                url: "https://cse.google.com/cse?cx=005797772976587943970:g-6ohngosio",
+                categoria: "googlecse",
+                categoriaNombre: "Google CSE",
+                coste: "Gratis",
+                desc: "Filtra recursos, documentos y archivos estáticos alojados en la infraestructura cloud de Amazon AWS.",
+                tip: "Detecta PDFs, hojas de cálculo o archivos de configuración almacenados en endpoints de AWS.",
+                tags: ["aws", "cloud", "amazon", "archivos"]
+            },
+
+            // --- MAPAS Y CÁMARAS EN VIVO ---
+            {
+                id: "googlemaps",
+                nombre: "Google Maps & Street View",
+                url: "https://www.google.com/maps",
+                categoria: "mapas",
+                categoriaNombre: "Mapas y Cámaras",
+                coste: "Gratis",
+                desc: "Plataforma cartográfica global con imágenes satelitales, Street View con histórico temporal y reseñas.",
+                tip: "Haz clic en 'Ver más fechas' en Street View para comparar cómo cambió un lugar a lo largo de los años.",
+                tags: ["street view", "satelite", "cronologia", "geolocalizacion"]
+            },
+            {
+                id: "openstreetmap",
+                nombre: "OpenStreetMap",
+                url: "https://www.openstreetmap.org/",
+                categoria: "mapas",
+                categoriaNombre: "Mapas y Cámaras",
+                coste: "Open Source",
+                desc: "Mapa libre y colaborativo mundial con detalles milimétricos de senderos, edificios y referencias locales.",
+                tip: "Mucho más detallado en zonas rurales y senderos peatonales que los mapas comerciales.",
+                tags: ["mapa libre", "senderos", "geodatos", "colaborativo"]
+            },
+            {
+                id: "mapillary",
+                nombre: "Mapillary",
+                url: "https://www.mapillary.com/app/",
+                categoria: "mapas",
+                categoriaNombre: "Mapas y Cámaras",
+                coste: "Gratis",
+                desc: "Red de imágenes callejeras a nivel de suelo subidas por miles de usuarios con metadatos EXIF exactos.",
+                tip: "Muestra calles secundarias, caminos y países enteros donde el coche de Google Street View nunca pasó.",
+                tags: ["calle", "fotografías", "street view alternativo", "usuarios"]
+            },
+            {
+                id: "liveuamap",
+                nombre: "Liveuamap",
+                url: "https://liveuamap.com/",
+                categoria: "mapas",
+                categoriaNombre: "Mapas y Cámaras",
+                coste: "Gratis",
+                desc: "Mapa interactivo de seguimiento de zonas de conflicto, protestas y crisis en tiempo real con fuentes verificadas.",
+                tip: "Permite filtrar por regiones del mundo (Oriente Medio, Ucrania, Cáucaso, etc.) con enlace a la fuente original.",
+                tags: ["conflictos", "noticias en vivo", "crisis", "geopolítica"]
+            },
+            {
+                id: "windywebcams",
+                nombre: "Windy Webcams",
+                url: "https://www.windy.com/-Webcams/webcams",
+                categoria: "mapas",
+                categoriaNombre: "Mapas y Cámaras",
+                coste: "Gratis",
+                desc: "Directorio global de miles de cámaras web públicas en directo ordenadas en un mapa meteorológico.",
+                tip: "Comprueba las condiciones climáticas o la actividad en tiempo real de una ciudad o costa específica.",
+                tags: ["webcams", "cámaras en vivo", "tiempo real", "clima"]
+            },
+            {
+                id: "radiogarden",
+                nombre: "Radio Garden",
+                url: "http://radio.garden/search",
+                categoria: "mapas",
+                categoriaNombre: "Mapas y Cámaras",
+                coste: "Gratis",
+                desc: "Explorador interactivo en 3D del planeta para sintonizar emisoras de radio locales en directo.",
+                tip: "Sintoniza radios locales de un pueblo o región remota para escuchar noticias de última hora no cubiertas por cadenas globales.",
+                tags: ["radio", "transmisión en directo", "audio local", "cultura"]
+            },
+            {
+                id: "wikimapia",
+                nombre: "Wikimapia",
+                url: "http://wikimapia.org/",
+                categoria: "mapas",
+                categoriaNombre: "Mapas y Cámaras",
+                coste: "Gratis",
+                desc: "Mapa de código abierto con polígonos etiquetados y descripciones de instalaciones industriales, militares y civiles.",
+                tip: "Fantástico para saber qué empresa o entidad opera un edificio o almacén sin señalización oficial.",
+                tags: ["polígonos", "instalaciones", "wiki", "mapa"]
+            },
+
+            // --- GEOLOCALIZACIÓN E INTELIGENCIA ESPACIAL ---
+            {
+                id: "suncalc",
+                nombre: "SunCalc (Posición Solar y Sombras)",
+                url: "https://www.suncalc.org/",
+                categoria: "geo",
+                categoriaNombre: "Geolocalización y Satélite",
+                coste: "Gratis",
+                desc: "Calcula la posición exacta del sol, el ángulo y la longitud de las sombras para cualquier punto del planeta y hora.",
+                tip: "Crucial para cronolocalización: deduce la hora exacta en la que se tomó una fotografía midiendo la sombra de un poste o persona.",
+                tags: ["sombras", "sol", "cronolocalización", "fotografía", "hora"]
+            },
+            {
+                id: "geonames",
+                nombre: "GeoNames",
+                url: "https://www.geonames.org/",
+                categoria: "geo",
+                categoriaNombre: "Geolocalización y Satélite",
+                coste: "Gratis",
+                desc: "Base de datos geográfica con más de 11 millones de topónimos, coordenadas, códigos postales y altitudes.",
+                tip: "Permite desambiguar pueblos con el mismo nombre y encontrar coordenadas exactas para búsquedas por radio.",
+                tags: ["topónimos", "coordenadas", "ciudades", "base de datos"]
+            },
+            {
+                id: "flightradar24",
+                nombre: "Flightradar24",
+                url: "https://www.flightradar24.com/",
+                categoria: "geo",
+                categoriaNombre: "Geolocalización y Satélite",
+                coste: "Freemium",
+                desc: "Rastreo de vuelos comerciales, jets privados y aeronaves en tiempo real vía señales ADS-B.",
+                tip: "Rastrea la matrícula de aviones para verificar desplazamientos de personas de interés o dignatarios.",
+                tags: ["aviones", "vuelos", "ads-b", "radar", "aeronáutica"]
+            },
+            {
+                id: "marinetraffic",
+                nombre: "MarineTraffic",
+                url: "https://www.marinetraffic.com/",
+                categoria: "geo",
+                categoriaNombre: "Geolocalización y Satélite",
+                coste: "Freemium",
+                desc: "Rastreo de barcos, yates y buques de carga en todo el mundo a través del sistema AIS satelital y terrestre.",
+                tip: "Útil para investigar rutas marítimas de contrabando, yates de oligarcas o atraques en puertos.",
+                tags: ["barcos", "marítimo", "ais", "puertos", "buques"]
+            },
+            {
+                id: "geoseer",
+                nombre: "Geoseer.net",
+                url: "https://www.geoseer.net/",
+                categoria: "geo",
+                categoriaNombre: "Geolocalización y Satélite",
+                coste: "Gratis",
+                desc: "Buscador especializado en servicios de mapas espaciales WMS, WFS y WCS emitidos por organismos oficiales.",
+                tip: "Encuentra capas cartográficas estatales de catastro, límites de parcelas y usos del suelo.",
+                tags: ["wms", "wfs", "catastro", "geodatos oficiales"]
+            },
+            {
+                id: "shadowcrypt_geoip",
+                nombre: "GeoIP Tracker",
+                url: "https://shadowcrypt.net/tools/geoip",
+                categoria: "geo",
+                categoriaNombre: "Geolocalización y Satélite",
+                coste: "Gratis",
+                desc: "Consulta rápida de geolocalización de direcciones IP, ASN, proveedor de Internet (ISP) y zona horaria.",
+                tip: "Contrasta siempre con otra base de datos de IP (como MaxMind o IPinfo) antes de afirmar una ubicación.",
+                tags: ["geoip", "isp", "asn", "ip", "ubicación"]
+            },
+
+            // --- DOCUMENTOS, METADATOS Y ARCHIVOS ---
+            {
+                id: "waybackmachine",
+                nombre: "Wayback Machine (Internet Archive)",
+                url: "https://web.archive.org/",
+                categoria: "documentos",
+                categoriaNombre: "Documentos y Metadatos",
+                coste: "Gratis",
+                desc: "El mayor archivo histórico de Internet, con copias de miles de millones de páginas eliminadas o modificadas.",
+                tip: "Usa el comando 'Changes' para comparar versiones anteriores y descubrir información que el objetivo borró recientemente.",
+                tags: ["archivo histórico", "caché", "páginas borradas", "recuperación"]
+            },
+            {
+                id: "archive_today",
+                nombre: "Archive.today (archive.ph)",
+                url: "https://archive.today/",
+                categoria: "documentos",
+                categoriaNombre: "Documentos y Metadatos",
+                coste: "Gratis",
+                desc: "Capturador de páginas web que genera una copia inmutable del texto y una captura gráfica de pantalla.",
+                tip: "A menudo elude muros de pago (paywalls) y preserva pruebas digitales válidas con marca de tiempo.",
+                tags: ["preservación de evidencia", "captura inmutable", "paywall"]
+            },
+            {
+                id: "exiftool_online",
+                nombre: "Online Exif Viewer",
+                url: "https://jimpl.com/",
+                categoria: "documentos",
+                categoriaNombre: "Documentos y Metadatos",
+                coste: "Gratis",
+                desc: "Visualizador online de metadatos EXIF en fotografías: modelo de cámara, fecha, objetivo y coordenadas GPS.",
+                tip: "Muchas fotos subidas a blogs o servicios de mensajería conservan las coordenadas GPS exactas de la toma.",
+                tags: ["exif", "metadatos", "gps", "fotografía", "cámara"]
+            },
+
+            // --- BRECHAS DE SEGURIDAD Y LEAKS ---
+            {
+                id: "haveibeenpwned",
+                nombre: "Have I Been Pwned",
+                url: "https://haveibeenpwned.com/",
+                categoria: "brechas",
+                categoriaNombre: "Brechas y Filtraciones",
+                coste: "Gratis",
+                desc: "Comprueba si un correo o número telefónico ha sido expuesto en filtraciones y brechas de datos masivas.",
+                tip: "Te indica en qué servicios fue hackeada la cuenta (Adobe, LinkedIn, Canva), confirmando la existencia de la cuenta.",
+                tags: ["leaks", "brechas", "email", "pwned", "contraseñas"]
+            },
+            {
+                id: "intelx",
+                nombre: "Intelligence X",
+                url: "https://intelx.io/",
+                categoria: "brechas",
+                categoriaNombre: "Brechas y Filtraciones",
+                coste: "Freemium",
+                desc: "Motor de búsqueda y archivo que indexa la Darknet, pastes públicos de Pastebin y volcados de datos.",
+                tip: "Busca selectores como correos, dominios o hashes de Bitcoin para hallar menciones en foros clandestinos.",
+                tags: ["darknet", "pastebin", "volcados", "leaks", "hashes"]
+            },
+            {
+                id: "dehashed",
+                nombre: "DeHashed",
+                url: "https://dehashed.com/",
+                categoria: "brechas",
+                categoriaNombre: "Brechas y Filtraciones",
+                coste: "De pago",
+                desc: "Base de datos masiva de credenciales filtradas con capacidad de búsqueda cruzada por nombre, usuario, IP o contraseña.",
+                tip: "Permite pivotar: si descubres una contraseña usada por el objetivo, puedes ver qué otras cuentas le pertenecen.",
+                tags: ["credenciales", "passwords", "pivot", "investigacion profunda"]
+            },
+
+            // --- EMPRESAS, REGISTROS Y FINANZAS ---
+            {
+                id: "opencorporates",
+                nombre: "OpenCorporates",
+                url: "https://opencorporates.com/",
+                categoria: "empresas",
+                categoriaNombre: "Empresas y Finanzas",
+                coste: "Gratis",
+                desc: "La mayor base de datos abierta de empresas del mundo, con más de 200 millones de entidades societarias y directores.",
+                tip: "Introduce el nombre del investigado para saber en qué empresas figura como administrador o accionista legal.",
+                tags: ["empresas", "directores", "sociedades", "registro mercantil", "accionistas"]
+            },
+            {
+                id: "icij_offshore",
+                nombre: "ICIJ Offshore Leaks Database",
+                url: "https://offshoreleaks.icij.org/",
+                categoria: "empresas",
+                categoriaNombre: "Empresas y Finanzas",
+                coste: "Gratis",
+                desc: "Base de datos de los Panama Papers, Pandora Papers y Paradise Papers investigados por el ICIJ.",
+                tip: "Revela beneficiarios reales y fideicomisos en paraísos fiscales como Islas Vírgenes Británicas o Panamá.",
+                tags: ["panama papers", "paraisos fiscales", "offshore", "corrupción"]
+            },
+
+            // --- CRIPTOMONEDAS Y BLOCKCHAIN ---
+            {
+                id: "blockchain_explorer",
+                nombre: "Blockchain.com Explorer",
+                url: "https://www.blockchain.com/explorer",
+                categoria: "cripto",
+                categoriaNombre: "Cripto y Blockchain",
+                coste: "Gratis",
+                desc: "Explorador público del libro mayor de Bitcoin y Ethereum para inspeccionar transacciones y saldos de billeteras.",
+                tip: "Rastrea el flujo de fondos de un rescate o pago ilícito siguiendo las entradas y salidas de cada dirección.",
+                tags: ["bitcoin", "ethereum", "billeteras", "transacciones", "cripto"]
+            },
+            {
+                id: "etherscan",
+                nombre: "Etherscan",
+                url: "https://etherscan.io/",
+                categoria: "cripto",
+                categoriaNombre: "Cripto y Blockchain",
+                coste: "Gratis",
+                desc: "Explorador líder para la blockchain de Ethereum, contratos inteligentes y tokens ERC-20.",
+                tip: "Revisa la pestaña 'Internal Txns' y 'Contract' para entender la lógica de tokens o transferencias de DeFi.",
+                tags: ["ethereum", "smart contracts", "erc20", "defi", "tokens"]
+            }
+        ];
+
+        // CATEGORÍAS DISPONIBLES
+        const CATEGORIES = [
+            { key: "todas", label: "✨ Todas", count: 0 },
+            { key: "contacto", label: "📞 Contacto Desechable", count: 0 },
+            { key: "generadores", label: "👤 Identidades y Avatares", count: 0 },
+            { key: "personas", label: "👥 Personas y Redes", count: 0 },
+            { key: "unificada", label: "🔍 Ciberamenazas & Infra", count: 0 },
+            { key: "motores", label: "🌐 Motores y Dorks", count: 0 },
+            { key: "googlecse", label: "⚙️ Google CSE", count: 0 },
+            { key: "mapas", label: "🗺️ Mapas y Cámaras", count: 0 },
+            { key: "geo", label: "🛰️ Geolocalización & GEO", count: 0 },
+            { key: "documentos", label: "📑 Documentos & Metadatos", count: 0 },
+            { key: "brechas", label: "🔐 Leaks y Brechas", count: 0 },
+            { key: "empresas", label: "🏢 Empresas y Finanzas", count: 0 },
+            { key: "cripto", label: "⛓️ Cripto y Blockchain", count: 0 }
+        ];
+
+        // ESTADO GLOBAL DE LA APLICACIÓN
+        let currentCategory = "todas";
+        let currentCost = "todos";
+        let searchQuery = "";
+        let onlyFavorites = false;
+        let favorites = JSON.parse(localStorage.getItem("osint_favs_v1") || "[]");
+
+        // INICIALIZACIÓN
+        document.addEventListener("DOMContentLoaded", () => {
+            initCategoryCounts();
+            renderCategoryPills();
+            renderTools();
+            setupSearchListeners();
+            updateFavoritesUI();
+            
+            // Atajo de teclado: presionar '/' para ir a la barra de búsqueda
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+                    e.preventDefault();
+                    document.getElementById("global-search").focus();
+                }
+                if (e.key === "Escape") {
+                    closeInvestigatorModal();
+                }
+            });
+        });
+
+        // CALCULAR CONTEO POR CATEGORÍA
+        function initCategoryCounts() {
+            CATEGORIES.forEach(cat => {
+                if (cat.key === "todas") {
+                    cat.count = OSINT_DATA.length;
+                } else {
+                    cat.count = OSINT_DATA.filter(t => t.categoria === cat.key).length;
+                }
+            });
+            document.getElementById("header-tools-count").textContent = `${OSINT_DATA.length} herramientas verificadas`;
+        }
+
+        // RENDERIZAR BOTONES DE CATEGORÍAS
+        function renderCategoryPills() {
+            const container = document.getElementById("category-pills");
+            container.innerHTML = "";
+
+            CATEGORIES.forEach(cat => {
+                const isActive = (currentCategory === cat.key);
+                const btn = document.createElement("button");
+                btn.className = `cat-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    isActive 
+                        ? "bg-blue-600 text-white shadow-xs shadow-blue-500/20" 
+                        : "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 hover:border-slate-300"
+                }`;
+                btn.innerHTML = `
+                    <span>${cat.label}</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                        isActive ? "bg-blue-800 text-blue-100" : "bg-slate-100 text-slate-600"
+                    }">${cat.count}</span>
+                `;
+                btn.onclick = () => selectCategory(cat.key);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectCategory(catKey) {
+            currentCategory = catKey;
+            onlyFavorites = false;
+            updateCategoryIndicator();
+            renderCategoryPills();
+            renderTools();
+        }
+
+        function updateCategoryIndicator() {
+            const indicator = document.getElementById("active-category-indicator");
+            const catObj = CATEGORIES.find(c => c.key === currentCategory);
+            indicator.textContent = catObj ? `Mostrando: ${catObj.label}` : "Filtrando";
+        }
+
+        function setCostFilter(costKey) {
+            currentCost = costKey;
+            document.querySelectorAll(".cost-btn").forEach(btn => {
+                if (btn.getAttribute("data-cost") === costKey) {
+                    btn.className = "cost-btn active text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer bg-slate-900 text-white border-slate-900 shadow-xs";
+                } else {
+                    btn.className = "cost-btn text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100";
+                }
+            });
+            renderTools();
+        }
+
+        // CONFIGURAR ESCUCHA DE BÚSQUEDA
+        function setupSearchListeners() {
+            const searchInput = document.getElementById("global-search");
+            const clearBtn = document.getElementById("clear-search-btn");
+
+            searchInput.addEventListener("input", (e) => {
+                searchQuery = e.target.value.toLowerCase().trim();
+                clearBtn.classList.toggle("hidden", searchQuery === "");
+                renderTools();
+            });
+
+            clearBtn.addEventListener("click", () => {
+                searchInput.value = "";
+                searchQuery = "";
+                clearBtn.classList.add("hidden");
+                searchInput.focus();
+                renderTools();
+            });
+        }
+
+        // ALTERNAR FAVORITOS
+        function toggleFavorite(toolId, event) {
+            if (event) event.stopPropagation();
+            if (favorites.includes(toolId)) {
+                favorites = favorites.filter(id => id !== toolId);
+                showToast("Eliminado de favoritos", "info");
+            } else {
+                favorites.push(toolId);
+                showToast("Guardado en favoritos ★", "success");
+            }
+            localStorage.setItem("osint_favs_v1", JSON.stringify(favorites));
+            updateFavoritesUI();
+            renderTools();
+        }
+
+        function updateFavoritesUI() {
+            const badge = document.getElementById("favorites-badge-count");
+            badge.textContent = favorites.length;
+            const favBtn = document.getElementById("btn-toggle-favorites");
+            if (onlyFavorites) {
+                favBtn.className = "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-amber-300 bg-amber-50 text-amber-900 transition cursor-pointer shadow-xs";
+            } else {
+                favBtn.className = "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs";
+            }
+        }
+
+        function toggleFavoritesFilter() {
+            onlyFavorites = !onlyFavorites;
+            if (onlyFavorites) {
+                currentCategory = "todas";
+            }
+            updateFavoritesUI();
+            renderCategoryPills();
+            renderTools();
+        }
+
+        // RESETEAR TODOS LOS FILTROS
+        function resetAllFilters() {
+            currentCategory = "todas";
+            currentCost = "todos";
+            searchQuery = "";
+            onlyFavorites = false;
+            document.getElementById("global-search").value = "";
+            document.getElementById("clear-search-btn").classList.add("hidden");
+            setCostFilter("todos");
+            updateCategoryIndicator();
+            renderCategoryPills();
+            updateFavoritesUI();
+            renderTools();
+        }
+
+        // RENDERIZAR HERRAMIENTAS FILTRADAS
+        function renderTools() {
+            const grid = document.getElementById("tools-grid");
+            const resultsCountSpan = document.getElementById("results-count");
+            const resetBtn = document.getElementById("reset-filters-btn");
+
+            // Filtrar herramientas
+            let filtered = OSINT_DATA.filter(tool => {
+                // Categoría
+                if (currentCategory !== "todas" && tool.categoria !== currentCategory) {
+                    return false;
+                }
+                // Coste
+                if (currentCost !== "todos" && tool.coste !== currentCost) {
+                    return false;
+                }
+                // Favoritos
+                if (onlyFavorites && !favorites.includes(tool.id)) {
+                    return false;
+                }
+                // Búsqueda por texto
+                if (searchQuery !== "") {
+                    const haystack = `${tool.nombre} ${tool.desc} ${tool.tip} ${tool.categoriaNombre} ${tool.tags.join(" ")}`.toLowerCase();
+                    return haystack.includes(searchQuery);
+                }
+                return true;
+            });
+
+            // Actualizar contadores
+            resultsCountSpan.innerHTML = `Mostrando <b>${filtered.length}</b> de ${OSINT_DATA.length} herramientas`;
+            const isFiltered = (currentCategory !== "todas" || currentCost !== "todos" || searchQuery !== "" || onlyFavorites);
+            resetBtn.classList.toggle("hidden", !isFiltered);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center bg-white rounded-2xl border border-slate-200 p-8">
+                        <div class="text-4xl mb-3">🔍</div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">No se encontraron herramientas</h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto mb-4">No hay resultados para los filtros actuales o la búsqueda "${searchQuery}". Intenta buscar con otros términos o restablece los filtros.</p>
+                        <button onclick="resetAllFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition cursor-pointer">
+                            Restablecer todos los filtros
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Inyectar fichas
+            grid.innerHTML = filtered.map(tool => {
+                const isFav = favorites.includes(tool.id);
+
+                // Estilo de badge de coste
+                let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                let badgeIcon = "🟢";
+                if (tool.coste === "Freemium") {
+                    badgeStyle = "bg-blue-50 text-blue-700 border-blue-200";
+                    badgeIcon = "🔵";
+                } else if (tool.coste === "De pago") {
+                    badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
+                    badgeIcon = "🟠";
+                } else if (tool.coste === "Open Source") {
+                    badgeStyle = "bg-purple-50 text-purple-700 border-purple-200";
+                    badgeIcon = "🟣";
+                }
+
+                return `
+                    <article class="bg-white border border-slate-200/90 rounded-2xl p-4.5 shadow-xs hover:shadow-md hover:border-blue-400 transition flex flex-col justify-between group">
+                        <div>
+                            <!-- Cabecera de la ficha -->
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">${tool.categoriaNombre}</span>
+                                    </div>
+                                    <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-600 transition flex items-center gap-1.5">
+                                        <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="hover:underline flex items-center gap-1">
+                                            ${tool.nombre}
+                                            <span class="text-xs text-slate-400">↗</span>
+                                        </a>
+                                    </h3>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="toggleFavorite('${tool.id}', event)" class="p-1 text-slate-300 hover:text-amber-500 rounded-lg transition cursor-pointer" title="${isFav ? 'Quitar de favoritos' : 'Guardar en favoritos'}">
+                                        <span class="text-base ${isFav ? 'text-amber-500' : ''}">${isFav ? '★' : '☆'}</span>
+                                    </button>
+                                    <span class="text-[11px] px-2 py-0.5 rounded-md font-semibold border ${badgeStyle} whitespace-nowrap">
+                                        ${badgeIcon} ${tool.coste}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Descripción concisa -->
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                ${tool.desc}
+                            </p>
+
+                            <!-- Tip táctico OSINT -->
+                            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2.5 mb-3 text-[11px] text-slate-700">
+                                <span class="font-bold text-blue-700">💡 Tip OSINT:</span> ${tool.tip}
+                            </div>
+                        </div>
+
+                        <!-- Pie de la ficha: Tags y acciones rápidas -->
+                        <div>
+                            <div class="flex flex-wrap gap-1 mb-3">
+                                ${tool.tags.slice(0, 3).map(tag => `
+                                    <span class="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded font-medium">#${tag}</span>
+                                `).join("")}
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                                <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="flex-1 py-1.5 px-3 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white rounded-lg text-xs font-bold text-center transition flex items-center justify-center gap-1">
+                                    <span>Abrir Herramienta</span>
+                                    <span>→</span>
+                                </a>
+                                <button onclick="copyToClipboard('${tool.url}', event)" class="p-1.5 border border-slate-200 hover:bg-slate-100 rounded-lg text-slate-600 transition cursor-pointer" title="Copiar enlace directo">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+        }
+
+        // COPIAR AL PORTAPAPELES
+        function copyToClipboard(text, event) {
+            if (event) event.stopPropagation();
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Enlace copiado al portapapeles", "success");
+            }).catch(() => {
+                showToast("No se pudo copiar el enlace", "error");
+            });
+        }
+
+        // NOTIFICACIÓN TOAST
+        function showToast(message, type = "success") {
+            const toast = document.getElementById("toast");
+            const msgSpan = document.getElementById("toast-message");
+            const iconSpan = document.getElementById("toast-icon");
+
+            msgSpan.textContent = message;
+            iconSpan.textContent = (type === "success") ? "✓" : (type === "info" ? "★" : "✕");
+            
+            toast.classList.remove("opacity-0", "pointer-events-none");
+            setTimeout(() => {
+                toast.classList.add("opacity-0", "pointer-events-none");
+            }, 2500);
+        }
+
+        // MODAL DE LANZADOR RÁPIDO
+        function openInvestigatorModal() {
+            document.getElementById("investigator-modal").classList.remove("hidden");
+            document.getElementById("quick-target-input").focus();
+            updateQuickToolsList();
+        }
+
+        function closeInvestigatorModal() {
+            document.getElementById("investigator-modal").classList.add("hidden");
+        }
+
+        document.getElementById("quick-query-type").addEventListener("change", updateQuickToolsList);
+
+        function updateQuickToolsList() {
+            const type = document.getElementById("quick-query-type").value;
+            const list = document.getElementById("quick-tool-links");
+            const val = encodeURIComponent(document.getElementById("quick-target-input").value.trim() || "OBJETIVO");
+
+            const links = {
+                username: [
+                    { name: "WhatsMyName", url: `https://whatsmyname.app/` },
+                    { name: "UserSearch.org", url: `https://usersearch.org/` },
+                    { name: "Google Dork", url: `https://www.google.com/search?q=%22${val}%22` }
+                ],
+                domain: [
+                    { name: "VirusTotal", url: `https://www.virustotal.com/gui/domain/${val}` },
+                    { name: "urlscan.io", url: `https://urlscan.io/search/#${val}` },
+                    { name: "crt.sh Subdominios", url: `https://crt.sh/?q=%25.${val}` },
+                    { name: "Wayback Machine", url: `https://web.archive.org/web/*/${val}` }
+                ],
+                ip: [
+                    { name: "Shodan", url: `https://www.shodan.io/host/${val}` },
+                    { name: "Criminal IP", url: `https://www.criminalip.io/asset/report/${val}` },
+                    { name: "VirusTotal IP", url: `https://www.virustotal.com/gui/ip-address/${val}` }
+                ],
+                email: [
+                    { name: "HaveIBeenPwned", url: `https://haveibeenpwned.com/` },
+                    { name: "IntelX", url: `https://intelx.io/?s=${val}` },
+                    { name: "Google Dork", url: `https://www.google.com/search?q=%22${val}%22` }
+                ],
+                phone: [
+                    { name: "TruePeopleSearch", url: `https://www.truepeoplesearch.com/results?phoneno=${val}` },
+                    { name: "Google Search", url: `https://www.google.com/search?q=%22${val}%22` }
+                ],
+                dork: [
+                    { name: "Documentos confidenciales (PDF/DOC)", url: `https://www.google.com/search?q=filetype:pdf+OR+filetype:doc+%22confidencial%22+${val}` },
+                    { name: "Carpetas abiertas (Index of)", url: `https://www.google.com/search?q=intitle:%22index+of%22+${val}` }
+                ]
+            };
+
+            const items = links[type] || [];
+            list.innerHTML = items.map(item => `
+                <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-600 hover:text-white rounded-lg text-slate-700 font-semibold transition flex items-center gap-1">
+                    <span>${item.name}</span>
+                    <span class="text-[10px]">↗</span>
+                </a>
+            `).join("");
+        }
+
+        function executeQuickSearch() {
+            const val = document.getElementById("quick-target-input").value.trim();
+            if (!val) {
+                showToast("Por favor ingresa un término de búsqueda", "error");
+                return;
+            }
+            updateQuickToolsList();
+            showToast("Enlaces preparados abajo", "success");
+        }
+    </script>
+</body>
+</html>

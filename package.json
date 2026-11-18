@@ -1,0 +1,11 @@
+{
+  "name": "directorio-osint-pro",
+  "version": "1.0.0",
+  "description": "Directorio OSINT profesional en español: herramientas, filtros, búsqueda instantánea y consejos prácticos de investigación.",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["osint", "investigacion", "ciberseguridad", "herramientas", "espanol"],
+  "author": "domitrader",
+  "license": "MIT"
+}
