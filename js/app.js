@@ -4,7 +4,7 @@
  * tema Dark/Light nativo, workflows con checklist pericial y exportador multi-formato.
  */
 
-import { CATEGORIES, OSINT_TOOLS, WORKFLOWS, OSINT_DORKS } from "./data.js";
+import { CATEGORIES, OSINT_TOOLS, WORKFLOWS, OSINT_DORKS } from "./data.js?v=3.1.0";
 
 class OsintHubApp {
   constructor() {
@@ -553,6 +553,21 @@ class OsintHubApp {
           e.stopPropagation();
           const tool = OSINT_TOOLS.find(t => t.id === btn.dataset.stepInfoId);
           if (tool) this.openDetailModal(tool);
+        });
+      });
+
+      // Click táctil en toda la fila (excepto checkbox o info) abre la herramienta directamente
+      container.querySelectorAll(".workflow-step-row").forEach(row => {
+        row.style.cursor = "pointer";
+        row.addEventListener("click", (e) => {
+          if (e.target.closest(".step-checkbox") || e.target.closest(".btn-step-info") || e.target.closest("a")) {
+            return;
+          }
+          const toolId = row.dataset.stepToolId;
+          const tool = OSINT_TOOLS.find(t => t.id === toolId);
+          if (tool && tool.url) {
+            window.open(tool.url, "_blank", "noopener,noreferrer");
+          }
         });
       });
     });
