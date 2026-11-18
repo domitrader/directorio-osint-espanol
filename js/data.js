@@ -75,7 +75,7 @@ export const OSINT_TOOLS = [
   {
     id: "blackbird-osint",
     name: "Blackbird OSINT",
-    url: "https://blackbird-osint.herokuapp.com/",
+    url: "https://github.com/p1ngul1n0/blackbird",
     category: "personas",
     categoryLabel: "Personas y Nicknames",
     cost: "Open Source",
@@ -86,7 +86,7 @@ export const OSINT_TOOLS = [
     practicalTip: "A diferencia de herramientas que solo hacen comprobación básica de estado 200, Blackbird analiza respuestas dinámicas para minimizar falsos positivos.",
     keyFeatures: ["Comprobación inteligente de falsos positivos", "Generación de informe de coincidencias", "Motor rápido asíncrono"],
     tags: ["python", "open source", "reconocimiento", "username", "falsos positivos"],
-    directQueryUrl: "https://blackbird-osint.herokuapp.com/"
+    directQueryUrl: "https://github.com/p1ngul1n0/blackbird"
   },
   {
     id: "webmii",
@@ -1388,6 +1388,87 @@ export const OSINT_TOOLS = [
     keyFeatures: ["Soporte de decenas de formatos ofimáticos y multimedia", "Extracción de autores y nombres de equipos", "Histórico de revisiones"],
     tags: ["metadatos pdf", "office", "autores", "forense documental", "metadata2go"]
   }
+,
+  {
+    id: "osintframework",
+    name: "OSINT Framework",
+    url: "https://osintframework.com/",
+    category: "motores",
+    categoryLabel: "Motores y Dorking",
+    cost: "Open Source",
+    level: "Básico",
+    opsec: "Seguro (Pasivo)",
+    requiresAuth: false,
+    summary: "Estructura interactiva de árbol que categoriza cientos de herramientas de ciberinteligencia por tipo de dato objetivo (IP, usuario, dominio, etc.).",
+    practicalTip: "Úsala como mapa mental operativo cuando te bloquees en una investigación para descubrir fuentes alternativas por vector de entrada.",
+    keyFeatures: ["Mapa mental exhaustivo por vectores", "Acceso directo a cientos de APIs y servicios", "100% web y sin registro"],
+    tags: ["framework", "arbol", "mapa mental", "metodologia", "recursos"],
+    directQueryUrl: "https://osintframework.com/"
+  },
+  {
+    id: "maltego",
+    name: "Maltego (Community Edition)",
+    url: "https://www.maltego.com/",
+    category: "infraestructura",
+    categoryLabel: "Infraestructura e IPs",
+    cost: "Freemium",
+    level: "Avanzado",
+    opsec: "Seguro (Pasivo)",
+    requiresAuth: true,
+    summary: "Plataforma líder de minería de datos y análisis gráfico de enlaces para investigaciones de ciberseguridad y análisis forense.",
+    practicalTip: "Ejecuta transformaciones automáticas para convertir dominios en bloques de red, entidades DNS y correos de administradores con grafos visuales.",
+    keyFeatures: ["Grafos de relaciones entre entidades", "Integración con Shodan, VirusTotal y HaveIBeenPwned", "Exportación forense pericial"],
+    tags: ["grafos", "enlaces", "transformaciones", "forense", "amenazas"],
+    directQueryUrl: "https://www.maltego.com/"
+  },
+  {
+    id: "spiderfoot",
+    name: "SpiderFoot HX",
+    url: "https://github.com/smicallef/spiderfoot",
+    category: "infraestructura",
+    categoryLabel: "Infraestructura e IPs",
+    cost: "Open Source",
+    level: "Avanzado",
+    opsec: "Moderado",
+    requiresAuth: false,
+    summary: "Herramienta de automatización de reconocimiento OSINT que consulta más de 100 fuentes públicas simultáneamente.",
+    practicalTip: "Automatiza la fase preliminar de reconocimiento pasivo introduciendo el dominio objetivo y activando únicamente los módulos pasivos.",
+    keyFeatures: ["Más de 100 módulos de recolección integrados", "Visualización gráfica de activos descubiertos", "Detección de fugas y credenciales"],
+    tags: ["automatizacion", "reconocimiento", "spiderfoot", "open source", "escaneo"],
+    directQueryUrl: "https://github.com/smicallef/spiderfoot"
+  },
+  {
+    id: "alienvault-otx",
+    name: "AlienVault OTX (Threat Intelligence)",
+    url: "https://otx.alienvault.com/",
+    category: "infraestructura",
+    categoryLabel: "Infraestructura e IPs",
+    cost: "Gratis",
+    level: "Intermedio",
+    opsec: "Seguro (Pasivo)",
+    requiresAuth: false,
+    summary: "La mayor comunidad abierta de intercambio de inteligencia de amenazas e indicadores de compromiso (IoC).",
+    practicalTip: "Comprueba pulsos comunitarios para ver si una IP o dominio ha sido vinculado a campañas de malware o ciberataques dirigidos.",
+    keyFeatures: ["Base de datos comunitaria de IoCs", "Pulsos de amenazas y malware", "Búsqueda abierta de dominios e IPs"],
+    tags: ["threat intelligence", "otx", "alienvault", "ioc", "ciberataques"],
+    directQueryUrl: "https://otx.alienvault.com/indicator/domain/%QUERY%"
+  },
+  {
+    id: "pulsedive",
+    name: "Pulsedive Threat Intelligence",
+    url: "https://pulsedive.com/",
+    category: "infraestructura",
+    categoryLabel: "Infraestructura e IPs",
+    cost: "Freemium",
+    level: "Intermedio",
+    opsec: "Seguro (Pasivo)",
+    requiresAuth: false,
+    summary: "Plataforma analítica comunitaria de indicadores de compromiso (IoCs) que puntúa el nivel de riesgo de IPs, dominios y hashes.",
+    practicalTip: "Consulta la puntuación de riesgo global (Risk Factor) y los atributos históricos de un dominio antes de catalogarlo como malicioso.",
+    keyFeatures: ["Puntuación de riesgo en tiempo real", "Mapeo de infraestructura y puertos", "Exportación de datos de amenazas"],
+    tags: ["pulsedive", "ioc", "riesgo", "reputacion", "threat intel"],
+    directQueryUrl: "https://pulsedive.com/indicator/?ioc=%QUERY%"
+  }
 ];
 
 export const WORKFLOWS = [
@@ -1442,39 +1523,63 @@ export const WORKFLOWS = [
 
 export const OSINT_DORKS = [
   {
-    title: "Archivos Confidenciales Expuestos (PDF/DOC)",
-    syntax: 'filetype:pdf OR filetype:doc OR filetype:docx "confidencial" OR "no divulgar" OR "restringido"',
-    targetType: "all",
-    tip: "Encuentra documentos gubernamentales o corporativos clasificados que fueron indexados por error."
-  },
-  {
-    title: "Copias de Seguridad de Bases de Datos (.sql, .bak, .env)",
-    syntax: 'filetype:sql OR filetype:env OR filetype:bak OR filetype:log "password" OR "DB_PASSWORD"',
+    title: "Documentos Confidenciales y Reservados (PDF/DOCX/XLSX)",
+    syntax: "filetype:pdf OR filetype:docx OR filetype:xlsx (\"confidencial\" OR \"no divulgar\" OR \"restringido\" OR \"nominas\")",
     targetType: "domain",
-    tip: "Detecta volcados de bases de datos y archivos de configuración con credenciales en texto plano."
+    tip: "Encuentra documentos internos clasificados o nóminas expuestas indexadas por descuido."
   },
   {
-    title: "Directorios Abiertos de Servidores (Index of)",
-    syntax: 'intitle:"index of" "parent directory" (backup | pass | dump | private)',
+    title: "Credenciales y Variables de Entorno (.env, wp-config, id_rsa)",
+    syntax: "filetype:env OR filename:.env OR filename:wp-config.php (\"DB_PASSWORD\" OR \"APP_KEY\" OR \"PRIVATE KEY\")",
     targetType: "domain",
-    tip: "Localiza servidores Apache o Nginx con listado de directorios habilitado sin fichero index."
+    tip: "Detecta archivos de configuración que contienen contraseñas de bases de datos o llaves criptográficas."
   },
   {
-    title: "Hojas de Cálculo con Datos de Clientes / Empleados",
-    syntax: 'filetype:xls OR filetype:xlsx OR filetype:csv "dni" OR "telefono" OR "correo" OR "nomina"',
+    title: "Volcados y Backups de Bases de Datos (.sql, .bak, .dump)",
+    syntax: "(filetype:sql OR filetype:bak OR filetype:dump OR filetype:tar) (\"dump\" OR \"backup\" OR \"database\")",
+    targetType: "domain",
+    tip: "Identifica copias de seguridad de bases de datos accesibles públicamente en el servidor web."
+  },
+  {
+    title: "Directorios Abiertos del Servidor (Index of / Parent Directory)",
+    syntax: "intitle:\"index of\" \"parent directory\" (backup | pass | dump | private | confidential)",
+    targetType: "domain",
+    tip: "Localiza servidores web Apache o Nginx con navegación de directorios habilitada sin página index."
+  },
+  {
+    title: "Paneles de Administración y Accesos (inurl:admin, inurl:login, cPanel)",
+    syntax: "(inurl:admin OR inurl:login OR inurl:portal OR inurl:cpanel OR inurl:dashboard)",
+    targetType: "domain",
+    tip: "Descubre paneles de acceso restringido, interfaces de control y endpoints administrativos expuestos."
+  },
+  {
+    title: "Archivos de Logs del Sistema (.log, error_log, debug.log)",
+    syntax: "filetype:log (\"error\" OR \"access_log\" OR \"debug\" OR \"exception\" OR \"token\")",
+    targetType: "domain",
+    tip: "Inspecciona registros de ejecución que pueden revelar IPs de usuarios, tokens de sesión o rutas internas."
+  },
+  {
+    title: "Buckets y Almacenamiento en la Nube (AWS S3 / Azure / GCP)",
+    syntax: "site:s3.amazonaws.com OR site:blob.core.windows.net OR site:storage.googleapis.com \"%QUERY%\"",
     targetType: "all",
-    tip: "Identifica fugas de bases de datos de clientes o empleados en hojas de cálculo públicas."
+    tip: "Rastrea buckets de Amazon S3 o almacenamiento Azure públicos pertenecientes a una organización."
   },
   {
-    title: "Cámaras de Seguridad IP sin Autenticación",
-    syntax: 'inurl:"viewerframe?mode=" OR inurl:"view/index.shtml" OR intitle:"Live View / - AXIS"',
+    title: "Repositorios y Carpetas Git Expuestas (.git/HEAD)",
+    syntax: "inurl:/.git/HEAD \"ref: refs/heads/\" OR inurl:/.svn/entries",
+    targetType: "domain",
+    tip: "Descubre servidores que alojan repositorios Git de producción abiertos permitiendo descargar el código fuente."
+  },
+  {
+    title: "Cámaras IP y Dispositivos de Vigilancia (Live View / Webcam)",
+    syntax: "inurl:\"viewerframe?mode=\" OR inurl:\"view/index.shtml\" OR intitle:\"Live View / - AXIS\"",
     targetType: "all",
-    tip: "Descubre paneles de control de cámaras de videovigilancia accesibles sin contraseña."
+    tip: "Descubre paneles de control de cámaras de videovigilancia accesibles sin autenticación previa."
   },
   {
-    title: "Búsqueda de Nombre o Alias en Archivos de Texto / Pastes",
-    syntax: 'site:pastebin.com OR site:rentry.co OR site:ghostbin.com "%QUERY%"',
-    targetType: "username",
-    tip: "Encuentra menciones de un usuario o correo en servicios de volcado de texto rápido."
+    title: "Fugas de Credenciales en Pastes y Servicios Públicos",
+    syntax: "(site:pastebin.com OR site:rentry.co OR site:ghostbin.com OR site:justpaste.it) \"%QUERY%\"",
+    targetType: "all",
+    tip: "Encuentra menciones de un usuario, correo o dominio en servicios públicos de volcado de texto rápido."
   }
 ];

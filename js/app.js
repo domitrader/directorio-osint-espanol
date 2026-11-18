@@ -1,6 +1,7 @@
 /**
- * OSINT HUB ESPAÑOL - MOTOR DE APLICACIÓN Y CONTROLADOR PRINCIPAL
- * Búsqueda reactiva instantánea, facetas múltiples, vistas intercambiables y lanzador dorks.
+ * OSINT HUB ESPAÑOL v3.0 - MOTOR DE APLICACIÓN CYBERCOMMAND
+ * Alto rendimiento, delegación de eventos, búsqueda multi-token debounced,
+ * tema Dark/Light nativo, workflows con checklist pericial y exportador multi-formato.
  */
 
 import { CATEGORIES, OSINT_TOOLS, WORKFLOWS, OSINT_DORKS } from "./data.js";
@@ -14,17 +15,21 @@ class OsintHubApp {
       opsec: "todos",
       search: "",
       onlyFavorites: false,
-      viewMode: localStorage.getItem("osint_view_mode") || "grid",
-      favorites: new Set(JSON.parse(localStorage.getItem("osint_favs_v2") || "[]")),
-      activeWorkflow: WORKFLOWS[0].id
+      workflowFilter: null,
+      favorites: new Set(JSON.parse(localStorage.getItem("osint_favs_v3") || "[]")),
+      workflowProgress: JSON.parse(localStorage.getItem("osint_wf_progress_v3") || "{}"),
+      activeWorkflow: WORKFLOWS[0].id,
+      theme: localStorage.getItem("osint_theme_v3") || "dark"
     };
 
+    this.debounceTimer = null;
     this.dom = {};
     this.init();
   }
 
   init() {
     this.cacheDom();
+    this.applyTheme();
     this.bindEvents();
     this.parseUrlHash();
     this.renderCategoryNav();
@@ -36,41 +41,89 @@ class OsintHubApp {
 
   cacheDom() {
     this.dom = {
+      // Búsqueda y Filtros
       searchInput: document.getElementById("main-search"),
       clearSearchBtn: document.getElementById("clear-search-btn"),
       categoryContainer: document.getElementById("category-scroll-container"),
       toolsGrid: document.getElementById("tools-grid-container"),
-      toolsTable: document.getElementById("tools-table-container"),
       resultsCount: document.getElementById("results-counter-val"),
       resetFiltersBtn: document.getElementById("btn-reset-all-filters"),
+      
+      // Acciones de Cabecera
       favToggleBtn: document.getElementById("btn-toggle-favs-view"),
       favBadgeCount: document.getElementById("favs-count-badge"),
-      viewGridBtn: document.getElementById("btn-view-grid"),
-      viewTableBtn: document.getElementById("btn-view-table"),
+      themeToggleBtn: document.getElementById("btn-toggle-theme"),
+      themeIcon: document.getElementById("theme-toggle-icon"),
+      openWorkflowsBtn: document.getElementById("btn-open-workflows"),
+      openDorkBuilderBtn: document.getElementById("btn-open-dork-builder"),
+      exportDossierBtn: document.getElementById("btn-export-dossier"),
+      
+      // Hero
+      heroToggleBtn: document.getElementById("btn-toggle-hero-workflows"),
+      heroContent: document.getElementById("hero-collapsible-content"),
+      heroToggleArrow: document.getElementById("hero-toggle-arrow"),
+      heroWorkflowSelect: document.getElementById("hero-workflow-select"),
+      heroWorkflowSteps: document.getElementById("hero-workflow-steps"),
+
       // Modales
       detailModal: document.getElementById("tool-detail-modal"),
       detailModalBody: document.getElementById("detail-modal-body"),
       detailModalTitle: document.getElementById("detail-modal-title"),
       detailModalLink: document.getElementById("detail-modal-direct-link"),
+      
       dorkModal: document.getElementById("dork-launcher-modal"),
       dorkTargetInput: document.getElementById("dork-target-input"),
       dorkResultsList: document.getElementById("dork-generated-list"),
+      
       caseExportModal: document.getElementById("case-export-modal"),
-      caseExportContent: document.getElementById("case-export-textarea"),
-      // Workflow
-      workflowSelect: document.getElementById("hero-workflow-select"),
-      workflowStepsList: document.getElementById("hero-workflow-steps"),
+      caseExportTextarea: document.getElementById("case-export-textarea"),
+      downloadMdBtn: document.getElementById("btn-download-md"),
+      downloadJsonBtn: document.getElementById("btn-download-json"),
+      downloadCsvBtn: document.getElementById("btn-download-csv"),
+      copyCaseMarkdownBtn: document.getElementById("btn-copy-case-markdown"),
+
+      workflowsModal: document.getElementById("workflows-modal"),
+      modalWorkflowSelect: document.getElementById("modal-workflow-select"),
+      modalWorkflowSteps: document.getElementById("modal-workflow-steps"),
+      btnFilterByWorkflow: document.getElementById("btn-filter-by-workflow"),
+
       toastContainer: document.getElementById("toast-container")
     };
   }
 
+  // ==================== TEMA OSCURO / CLARO ====================
+
+  applyTheme() {
+    if (this.state.theme === "light") {
+      document.documentElement.classList.add("theme-light");
+      if (this.dom.themeIcon) this.dom.themeIcon.textContent = "☀️";
+    } else {
+      document.documentElement.classList.remove("theme-light");
+      if (this.dom.themeIcon) this.dom.themeIcon.textContent = "🌙";
+    }
+  }
+
+  toggleTheme() {
+    this.state.theme = this.state.theme === "dark" ? "light" : "dark";
+    localStorage.setItem("osint_theme_v3", this.state.theme);
+    this.applyTheme();
+    this.showToast(`Modo ${this.state.theme === 'dark' ? 'oscuro' : 'claro'} activado`, "info");
+  }
+
+  // ==================== EVENTOS Y BINDINGS ====================
+
   bindEvents() {
-    // Búsqueda en vivo
+    // 1. Búsqueda con debounce (120ms) y tokenización multi-término
     this.dom.searchInput.addEventListener("input", (e) => {
-      this.state.search = e.target.value.trim().toLowerCase();
-      this.dom.clearSearchBtn.style.display = this.state.search ? "flex" : "none";
-      this.syncUrlHash();
-      this.renderTools();
+      clearTimeout(this.debounceTimer);
+      const val = e.target.value.trim().toLowerCase();
+      this.dom.clearSearchBtn.style.display = val ? "flex" : "none";
+
+      this.debounceTimer = setTimeout(() => {
+        this.state.search = val;
+        this.syncUrlHash();
+        this.renderTools();
+      }, 120);
     });
 
     this.dom.clearSearchBtn.addEventListener("click", () => {
@@ -82,9 +135,9 @@ class OsintHubApp {
       this.renderTools();
     });
 
-    // Filtros de coste
+    // 2. Filtros de Coste
     document.querySelectorAll("[data-filter-cost]").forEach(btn => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", () => {
         document.querySelectorAll("[data-filter-cost]").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         this.state.cost = btn.dataset.filterCost;
@@ -92,7 +145,7 @@ class OsintHubApp {
       });
     });
 
-    // Selectores de nivel y opsec
+    // 3. Selectores de Nivel y OPSEC
     const levelSelect = document.getElementById("select-filter-level");
     if (levelSelect) {
       levelSelect.addEventListener("change", (e) => {
@@ -109,58 +162,135 @@ class OsintHubApp {
       });
     }
 
-    // Toggle de favoritos
+    // 4. Toggle de Favoritos
     this.dom.favToggleBtn.addEventListener("click", () => {
       this.state.onlyFavorites = !this.state.onlyFavorites;
-      this.dom.favToggleBtn.classList.toggle("primary", this.state.onlyFavorites);
+      this.dom.favToggleBtn.classList.toggle("active", this.state.onlyFavorites);
       this.renderCategoryNav();
       this.renderTools();
     });
 
-    // Reset de filtros
+    // 5. Reset General de Filtros
     this.dom.resetFiltersBtn.addEventListener("click", () => {
       this.resetAllFilters();
     });
 
-    // Alternar vistas Grid / Table
-    this.dom.viewGridBtn.addEventListener("click", () => this.switchView("grid"));
-    this.dom.viewTableBtn.addEventListener("click", () => this.switchView("table"));
+    // 6. Botones de Cabecera
+    this.dom.themeToggleBtn.addEventListener("click", () => this.toggleTheme());
+    this.dom.openDorkBuilderBtn.addEventListener("click", () => this.openDorkModal());
+    this.dom.exportDossierBtn.addEventListener("click", () => this.openCaseExportModal());
+    this.dom.openWorkflowsBtn.addEventListener("click", () => this.openWorkflowsModal());
 
-    // Workflow Select
-    if (this.dom.workflowSelect) {
-      this.dom.workflowSelect.addEventListener("change", (e) => {
+    // 7. Toggle Hero Móvil
+    if (this.dom.heroToggleBtn && this.dom.heroContent) {
+      this.dom.heroToggleBtn.addEventListener("click", () => {
+        const isExpanded = this.dom.heroContent.classList.toggle("is-expanded");
+        this.dom.heroToggleBtn.setAttribute("aria-expanded", isExpanded);
+        if (this.dom.heroToggleArrow) {
+          this.dom.heroToggleArrow.textContent = isExpanded ? "▴" : "▾";
+        }
+      });
+    }
+
+    // 8. Selects de Workflow
+    if (this.dom.heroWorkflowSelect) {
+      this.dom.heroWorkflowSelect.addEventListener("change", (e) => {
         this.state.activeWorkflow = e.target.value;
         this.renderWorkflowWidget();
       });
     }
 
-    // Toggle de Workflows en móvil
-    const heroToggleBtn = document.getElementById("btn-toggle-hero-workflows");
-    const heroContent = document.getElementById("hero-collapsible-content");
-    const heroArrow = document.getElementById("hero-toggle-arrow");
-
-    if (heroToggleBtn && heroContent) {
-      heroToggleBtn.addEventListener("click", () => {
-        const isExpanded = heroContent.classList.toggle("is-expanded");
-        heroToggleBtn.setAttribute("aria-expanded", isExpanded);
-        if (heroArrow) {
-          heroArrow.textContent = isExpanded ? "▴" : "▾";
-        }
+    if (this.dom.modalWorkflowSelect) {
+      this.dom.modalWorkflowSelect.addEventListener("change", (e) => {
+        this.state.activeWorkflow = e.target.value;
+        if (this.dom.heroWorkflowSelect) this.dom.heroWorkflowSelect.value = e.target.value;
+        this.renderWorkflowWidget();
       });
     }
 
-    // Modal Dorks Target Input
+    if (this.dom.btnFilterByWorkflow) {
+      this.dom.btnFilterByWorkflow.addEventListener("click", () => {
+        this.filterByActiveWorkflow();
+        this.closeAllModals();
+      });
+    }
+
+    // 9. Dork Target Input
     if (this.dom.dorkTargetInput) {
       this.dom.dorkTargetInput.addEventListener("input", () => {
         this.renderDorksList();
       });
     }
+
+    // 10. Export Actions (Descargas y Copiado)
+    if (this.dom.copyCaseMarkdownBtn) {
+      this.dom.copyCaseMarkdownBtn.addEventListener("click", () => {
+        const text = this.dom.caseExportTextarea.value;
+        this.copyToClipboard(text, "Expediente Markdown copiado al portapapeles");
+      });
+    }
+
+    if (this.dom.downloadMdBtn) {
+      this.dom.downloadMdBtn.addEventListener("click", () => this.downloadFile("informe-osint.md", this.dom.caseExportTextarea.value, "text/markdown"));
+    }
+
+    if (this.dom.downloadJsonBtn) {
+      this.dom.downloadJsonBtn.addEventListener("click", () => {
+        const favs = OSINT_TOOLS.filter(t => this.state.favorites.has(t.id));
+        this.downloadFile("kit-osint.json", JSON.stringify(favs, null, 2), "application/json");
+      });
+    }
+
+    if (this.dom.downloadCsvBtn) {
+      this.dom.downloadCsvBtn.addEventListener("click", () => this.downloadCsvFile());
+    }
+
+    // 11. Cierre universal de modales (Backdrop y botones [data-close-modal])
+    document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) this.closeAllModals();
+      });
+    });
+
+    document.querySelectorAll("[data-close-modal]").forEach(btn => {
+      btn.addEventListener("click", () => this.closeAllModals());
+    });
+
+    // 12. Delegación de eventos en el contenedor de tarjetas (Evita DOM Thrashing y acumulación de listeners)
+    this.dom.toolsGrid.addEventListener("click", (e) => {
+      // Favorito
+      const favBtn = e.target.closest("[data-fav-id]");
+      if (favBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleFavorite(favBtn.dataset.favId);
+        return;
+      }
+
+      // Copiar enlace directo
+      const copyBtn = e.target.closest("[data-copy-url]");
+      if (copyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.copyUrlWithInlineFeedback(copyBtn, copyBtn.dataset.copyUrl);
+        return;
+      }
+
+      // Abrir modal de detalle
+      const detailBtn = e.target.closest("[data-detail-id]");
+      if (detailBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const tool = OSINT_TOOLS.find(t => t.id === detailBtn.dataset.detailId);
+        if (tool) this.openDetailModal(tool);
+        return;
+      }
+    });
   }
 
   setupKeyboardShortcuts() {
     window.addEventListener("keydown", (e) => {
-      // '/' o 'Cmd/Ctrl + K' para buscar
-      if ((e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) && 
+      if ((e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) && 
           document.activeElement.tagName !== "INPUT" && 
           document.activeElement.tagName !== "TEXTAREA") {
         e.preventDefault();
@@ -168,50 +298,21 @@ class OsintHubApp {
         this.dom.searchInput.select();
       }
 
-      // Escape para cerrar cualquier modal abierto
       if (e.key === "Escape") {
         this.closeAllModals();
       }
     });
   }
 
-  // ==================== NAVEGACIÓN Y RENDER ====================
-
-  renderCategoryNav() {
-    this.dom.categoryContainer.innerHTML = "";
-
-    CATEGORIES.forEach(cat => {
-      let count = 0;
-      if (cat.id === "todas") {
-        count = OSINT_TOOLS.length;
-      } else {
-        count = OSINT_TOOLS.filter(t => t.category === cat.id).length;
-      }
-
-      const isActive = (this.state.category === cat.id) && !this.state.onlyFavorites;
-      const btn = document.createElement("button");
-      btn.className = `cat-pill-btn ${isActive ? "active" : ""}`;
-      btn.innerHTML = `
-        <span class="cat-icon">${cat.icon}</span>
-        <span>${cat.name}</span>
-        <span class="cat-count-badge">${count}</span>
-      `;
-
-      btn.addEventListener("click", () => {
-        this.state.category = cat.id;
-        this.state.onlyFavorites = false;
-        this.dom.favToggleBtn.classList.remove("primary");
-        this.syncUrlHash();
-        this.renderCategoryNav();
-        this.renderTools();
-      });
-
-      this.dom.categoryContainer.appendChild(btn);
-    });
-  }
+  // ==================== FILTRADO REACTIVO ====================
 
   getFilteredTools() {
     return OSINT_TOOLS.filter(tool => {
+      // Filtro por workflow específico
+      if (this.state.workflowFilter) {
+        if (!this.state.workflowFilter.includes(tool.id)) return false;
+      }
+
       // Categoría
       if (this.state.category !== "todas" && tool.category !== this.state.category) {
         return false;
@@ -237,10 +338,10 @@ class OsintHubApp {
         return false;
       }
 
-      // Búsqueda por texto (full-text indexado)
+      // Búsqueda multi-token (cada palabra debe coincidir)
       if (this.state.search) {
-        const query = this.state.search;
-        const searchCorpus = `
+        const tokens = this.state.search.split(/\s+/).filter(Boolean);
+        const corpus = `
           ${tool.name} 
           ${tool.summary} 
           ${tool.practicalTip} 
@@ -249,7 +350,7 @@ class OsintHubApp {
           ${tool.keyFeatures.join(" ")}
         `.toLowerCase();
 
-        return searchCorpus.includes(query);
+        return tokens.every(token => corpus.includes(token));
       }
 
       return true;
@@ -265,7 +366,8 @@ class OsintHubApp {
                         this.state.level !== "todos" || 
                         this.state.opsec !== "todos" || 
                         this.state.search !== "" || 
-                        this.state.onlyFavorites);
+                        this.state.onlyFavorites ||
+                        this.state.workflowFilter !== null);
 
     this.dom.resetFiltersBtn.style.display = isFiltered ? "inline-block" : "none";
 
@@ -274,27 +376,15 @@ class OsintHubApp {
       return;
     }
 
-    if (this.state.viewMode === "grid") {
-      this.renderGridView(tools);
-    } else {
-      this.renderTableView(tools);
-    }
-  }
-
-  renderGridView(tools) {
-    this.dom.toolsGrid.style.display = "grid";
-    this.dom.toolsTable.style.display = "none";
-    this.dom.toolsGrid.innerHTML = "";
+    // Render eficiente con DocumentFragment
+    const fragment = document.createDocumentFragment();
 
     tools.forEach(tool => {
       const isFav = this.state.favorites.has(tool.id);
       const card = document.createElement("article");
       card.className = "tool-card";
 
-      // Clase CSS de Coste
       const costClass = `cost-${tool.cost.toLowerCase().replace(/\s+/g, "-")}`;
-
-      // Badge de OPSEC
       const isSafe = tool.opsec.includes("Seguro");
       const opsecClass = isSafe ? "opsec-safe" : "opsec-warn";
 
@@ -334,173 +424,148 @@ class OsintHubApp {
 
         <div class="tool-card-actions">
           <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="btn-open-tool">
-            <span>Abrir Herramienta</span>
-            <span>→</span>
+            <span>Abrir Sitio Oficial</span>
+            <span>↗</span>
           </a>
           <button class="btn-icon-action" data-detail-id="${tool.id}" title="Ver expediente y análisis completo">
-            📋
+            ℹ
           </button>
           <button class="btn-icon-action" data-copy-url="${tool.url}" title="Copiar enlace verificado">
-            🔗
+            📋
           </button>
         </div>
       `;
 
-      // Eventos internos de tarjeta
-      card.querySelector("[data-fav-id]").addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.toggleFavorite(tool.id);
-      });
-
-      card.querySelector("[data-copy-url]").addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.copyToClipboard(tool.url, "Enlace directo copiado al portapapeles");
-      });
-
-      card.querySelector("[data-detail-id]").addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.openDetailModal(tool);
-      });
-
-      this.dom.toolsGrid.appendChild(card);
+      fragment.appendChild(card);
     });
-  }
 
-  renderTableView(tools) {
-    this.dom.toolsGrid.style.display = "none";
-    this.dom.toolsTable.style.display = "block";
-
-    const tbody = document.getElementById("tools-table-tbody");
-    tbody.innerHTML = "";
-
-    tools.forEach(tool => {
-      const isFav = this.state.favorites.has(tool.id);
-      const costClass = `cost-${tool.cost.toLowerCase().replace(/\s+/g, "-")}`;
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>
-          <button class="btn-star-fav ${isFav ? 'is-fav' : ''}" data-fav-id="${tool.id}">
-            ${isFav ? '★' : '☆'}
-          </button>
-        </td>
-        <td class="table-tool-name">
-          <a href="${tool.url}" target="_blank" rel="noopener noreferrer">
-            ${tool.name} ↗
-          </a>
-        </td>
-        <td><span class="meta-pill">${tool.categoryLabel}</span></td>
-        <td><span class="cost-badge ${costClass}">${tool.cost}</span></td>
-        <td><span class="meta-pill">${tool.level}</span></td>
-        <td><span class="meta-pill ${tool.opsec.includes('Seguro') ? 'opsec-safe' : 'opsec-warn'}">${tool.opsec}</span></td>
-        <td class="table-summary-cell">${tool.summary}</td>
-        <td>
-          <div style="display:flex; gap:0.4rem;">
-            <button class="btn-icon-action" data-detail-id="${tool.id}" title="Detalles">📋</button>
-            <button class="btn-icon-action" data-copy-url="${tool.url}" title="Copiar URL">🔗</button>
-          </div>
-        </td>
-      `;
-
-      tr.querySelector("[data-fav-id]").addEventListener("click", () => this.toggleFavorite(tool.id));
-      tr.querySelector("[data-copy-url]").addEventListener("click", () => this.copyToClipboard(tool.url, "Enlace copiado"));
-      tr.querySelector("[data-detail-id]").addEventListener("click", () => this.openDetailModal(tool));
-
-      tbody.appendChild(tr);
-    });
+    this.dom.toolsGrid.innerHTML = "";
+    this.dom.toolsGrid.appendChild(fragment);
   }
 
   renderEmptyState() {
-    this.dom.toolsGrid.style.display = "grid";
-    this.dom.toolsTable.style.display = "none";
     this.dom.toolsGrid.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">🔍</div>
         <h3>No se encontraron herramientas</h3>
-        <p>No hay coincidencias para los filtros activos o el término "${this.state.search}". Intenta con sinónimos o restablece los criterios.</p>
-        <button class="btn-header primary" id="btn-empty-reset">
-          Restablecer todos los filtros
-        </button>
+        <p>No hay recursos que coincidan con los filtros actuales o el término "${this.state.search}". Intenta ajustar la búsqueda o restablecer los filtros.</p>
+        <button id="btn-empty-reset" class="btn-tactical primary">Restablecer todos los filtros</button>
       </div>
     `;
 
-    document.getElementById("btn-empty-reset").addEventListener("click", () => this.resetAllFilters());
+    document.getElementById("btn-empty-reset").addEventListener("click", () => {
+      this.resetAllFilters();
+    });
   }
 
-  escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
+  // ==================== CATEGORÍAS Y NAVEGACIÓN ====================
+
+  renderCategoryNav() {
+    this.dom.categoryContainer.innerHTML = "";
+
+    CATEGORIES.forEach(cat => {
+      const count = cat.id === "todas" 
+        ? OSINT_TOOLS.length 
+        : OSINT_TOOLS.filter(t => t.category === cat.id).length;
+
+      const isActive = (this.state.category === cat.id) && !this.state.onlyFavorites;
+      const btn = document.createElement("button");
+      btn.className = `cat-pill-btn ${isActive ? "active" : ""}`;
+      btn.innerHTML = `
+        <span>${cat.name}</span>
+        <span class="cat-count-badge">${count}</span>
+      `;
+
+      btn.addEventListener("click", () => {
+        this.state.category = cat.id;
+        this.state.onlyFavorites = false;
+        this.state.workflowFilter = null;
+        this.dom.favToggleBtn.classList.remove("active");
+        this.renderCategoryNav();
+        this.renderTools();
+      });
+
+      this.dom.categoryContainer.appendChild(btn);
+    });
   }
 
-  highlightMatch(text) {
-    if (!text) return "";
-    const safeText = this.escapeHtml(text);
-    if (!this.state.search) return safeText;
-    const regex = new RegExp(`(${this.escapeRegex(this.escapeHtml(this.state.search))})`, "gi");
-    return safeText.replace(regex, `<mark style="background:#fef08a; padding:0 2px; border-radius:2px;">$1</mark>`);
-  }
-
-  escapeRegex(str) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  // ==================== WORKFLOWS HERO ====================
+  // ==================== WORKFLOWS HERO Y DRAWER ====================
 
   renderWorkflowWidget() {
-    if (!this.dom.workflowSelect || !this.dom.workflowStepsList) return;
+    const selects = [this.dom.heroWorkflowSelect, this.dom.modalWorkflowSelect].filter(Boolean);
 
-    // Poblar select si está vacío
-    if (this.dom.workflowSelect.children.length === 0) {
-      WORKFLOWS.forEach(wf => {
-        const opt = document.createElement("option");
-        opt.value = wf.id;
-        opt.textContent = `${wf.icon} ${wf.title}`;
-        this.dom.workflowSelect.appendChild(opt);
-      });
-    }
+    selects.forEach(select => {
+      if (select.children.length === 0) {
+        WORKFLOWS.forEach(wf => {
+          const opt = document.createElement("option");
+          opt.value = wf.id;
+          opt.textContent = `${wf.title}`;
+          select.appendChild(opt);
+        });
+      }
+      select.value = this.state.activeWorkflow;
+    });
 
     const currentWf = WORKFLOWS.find(w => w.id === this.state.activeWorkflow) || WORKFLOWS[0];
-    this.dom.workflowSelect.value = currentWf.id;
+    const targets = [this.dom.heroWorkflowSteps, this.dom.modalWorkflowSteps].filter(Boolean);
 
-    this.dom.workflowStepsList.innerHTML = currentWf.steps.map(step => {
-      const tool = OSINT_TOOLS.find(t => t.id === step.toolId);
-      const toolUrl = tool ? tool.url : "#";
+    targets.forEach(container => {
+      container.innerHTML = currentWf.steps.map(step => {
+        const tool = OSINT_TOOLS.find(t => t.id === step.toolId);
+        const toolUrl = tool ? tool.url : "#";
+        const progressKey = `${currentWf.id}_step_${step.step}`;
+        const isChecked = Boolean(this.state.workflowProgress[progressKey]);
 
-      return `
-        <div class="workflow-step-row" data-step-tool-id="${step.toolId}">
-          <div class="step-main">
-            <span class="step-num-badge">${step.step}</span>
-            <div class="step-content">
-              <a href="${toolUrl}" target="_blank" rel="noopener noreferrer" class="workflow-tool-link" title="Abrir sitio oficial de ${step.name}">
-                <strong>${step.name}</strong>
-                <span class="step-ext-arrow">↗</span>
+        return `
+          <div class="workflow-step-row" data-step-tool-id="${step.toolId}">
+            <div class="step-main">
+              <input type="checkbox" class="step-checkbox" data-wf-step="${progressKey}" ${isChecked ? 'checked' : ''} title="Marcar como completado">
+              <div class="step-content">
+                <a href="${toolUrl}" target="_blank" rel="noopener noreferrer" class="workflow-tool-link" title="Abrir sitio oficial">
+                  <strong>${step.name}</strong>
+                  <span class="step-ext-arrow">↗</span>
+                </a>
+                <span class="step-action-desc">${step.action}</span>
+              </div>
+            </div>
+            <div class="step-actions">
+              <a href="${toolUrl}" target="_blank" rel="noopener noreferrer" class="btn-step-open" title="Abrir ${step.name}">
+                <span>Abrir</span>
+                <span>↗</span>
               </a>
-              <span class="step-action-desc">${step.action}</span>
+              ${tool ? `<button class="btn-step-info" data-step-info-id="${step.toolId}" title="Ver expediente">ℹ</button>` : ''}
             </div>
           </div>
-          <div class="step-actions">
-            <a href="${toolUrl}" target="_blank" rel="noopener noreferrer" class="btn-step-open" title="Abrir sitio oficial de ${step.name}">
-              <span>Abrir</span>
-              <span>↗</span>
-            </a>
-            ${tool ? `<button class="btn-step-info" data-step-info-id="${step.toolId}" title="Ver expediente de ${step.name}">ℹ</button>` : ""}
-          </div>
-        </div>
-      `;
-    }).join("");
+        `;
+      }).join("");
 
-    // Conectar eventos de modal de detalle para los botones de información en los pasos
-    this.dom.workflowStepsList.querySelectorAll("[data-step-info-id]").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const toolId = btn.dataset.stepInfoId;
-        const tool = OSINT_TOOLS.find(t => t.id === toolId);
-        if (tool) {
-          this.openDetailModal(tool);
-        }
+      // Listener de Checkboxes persistentes
+      container.querySelectorAll("[data-wf-step]").forEach(chk => {
+        chk.addEventListener("change", (e) => {
+          this.state.workflowProgress[e.target.dataset.wfStep] = e.target.checked;
+          localStorage.setItem("osint_wf_progress_v3", JSON.stringify(this.state.workflowProgress));
+        });
+      });
+
+      // Listener de Info
+      container.querySelectorAll("[data-step-info-id]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const tool = OSINT_TOOLS.find(t => t.id === btn.dataset.stepInfoId);
+          if (tool) this.openDetailModal(tool);
+        });
       });
     });
+  }
+
+  filterByActiveWorkflow() {
+    const currentWf = WORKFLOWS.find(w => w.id === this.state.activeWorkflow) || WORKFLOWS[0];
+    const toolIds = currentWf.steps.map(s => s.toolId);
+    this.state.workflowFilter = toolIds;
+    this.state.category = "todas";
+    this.renderCategoryNav();
+    this.renderTools();
+    this.showToast(`Mostrando las ${toolIds.length} herramientas de: ${currentWf.title}`, "info");
   }
 
   // ==================== MODALES ====================
@@ -523,164 +588,133 @@ class OsintHubApp {
       </div>
 
       <div class="tool-tip-box" style="margin-bottom:0;">
-        <strong>🎯 Caso de Uso Táctico Recomendado:</strong>
-        ${tool.practicalTip}
+        <strong>💡 Consejo Operativo de Campo:</strong>
+        <p style="margin-top:0.25rem;">${tool.practicalTip}</p>
       </div>
 
-      <div>
-        <h4 class="modal-section-title">Capacidades Operativas Clave</h4>
-        <ul class="modal-features-list">
+      <div style="background:var(--bg-elevated); padding:0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+        <h4 style="font-size:0.75rem; font-weight:800; text-transform:uppercase; color:var(--text-primary); margin-bottom:0.4rem;">Características Clave:</h4>
+        <ul style="padding-left:1.2rem; font-size:0.78rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:0.25rem;">
           ${tool.keyFeatures.map(f => `<li>${f}</li>`).join("")}
         </ul>
       </div>
 
-      <div>
-        <h4 class="modal-section-title">Etiquetas de Búsqueda</h4>
-        <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-          ${tool.tags.map(t => `<span class="meta-pill">#${t}</span>`).join("")}
-        </div>
+      <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
+        ${tool.tags.map(t => `<span class="meta-pill">#${t}</span>`).join("")}
       </div>
-
-      ${tool.directQueryUrl ? `
-        <div style="background:var(--bg-subtle); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
-          <h4 class="modal-section-title" style="margin-bottom:0.4rem;">⚡ Ejecución Directa con Objetivo</h4>
-          <div style="display:flex; gap:0.5rem;">
-            <input type="text" id="modal-direct-target-input" placeholder="Introduce target (ej: objetivo.com, usuario, IP)..." class="main-search-input" style="padding:0.5rem 0.8rem; font-size:0.8rem;">
-            <button id="modal-direct-launch-btn" class="btn-header primary" style="white-space:nowrap;">Lanzar ↗</button>
-          </div>
-        </div>
-      ` : ''}
     `;
 
-    // Listener para lanzamiento directo si existe
-    if (tool.directQueryUrl) {
-      const launchBtn = document.getElementById("modal-direct-launch-btn");
-      const targetIn = document.getElementById("modal-direct-target-input");
-      launchBtn.addEventListener("click", () => {
-        const val = encodeURIComponent(targetIn.value.trim() || "");
-        if (!val) {
-          this.showToast("Introduce un objetivo para la consulta", "info");
-          return;
-        }
-        const finalUrl = tool.directQueryUrl.replace("%QUERY%", val);
-        window.open(finalUrl, "_blank", "noopener,noreferrer");
-      });
-    }
-
-    this.dom.detailModal.classList.add("is-open");
+    this.openModal(this.dom.detailModal);
   }
 
   openDorkModal() {
-    this.dom.dorkModal.classList.add("is-open");
-    if (this.dom.dorkTargetInput) {
-      this.dom.dorkTargetInput.focus();
-      this.renderDorksList();
-    }
+    this.renderDorksList();
+    this.openModal(this.dom.dorkModal);
+    setTimeout(() => this.dom.dorkTargetInput.focus(), 100);
   }
 
   renderDorksList() {
-    if (!this.dom.dorkResultsList) return;
-    const target = this.dom.dorkTargetInput.value.trim() || "OBJETIVO";
+    const rawTarget = this.dom.dorkTargetInput.value.trim();
+    const hasTarget = rawTarget.length > 0;
+    const target = encodeURIComponent(rawTarget || "target.com");
 
-    this.dom.dorkResultsList.innerHTML = OSINT_DORKS.map((dork, idx) => {
-      const compiledSyntax = dork.syntax.replace("%QUERY%", target);
-      const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(compiledSyntax)}`;
+    this.dom.dorkResultsList.innerHTML = OSINT_DORKS.map(dork => {
+      let finalSyntax = "";
+
+      if (dork.targetType === "domain") {
+        finalSyntax = hasTarget ? `site:${rawTarget} ${dork.syntax}` : dork.syntax;
+      } else {
+        finalSyntax = dork.syntax.replace(/%QUERY%/g, rawTarget || "target");
+      }
+
+      const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(finalSyntax)}`;
 
       return `
-        <div class="dork-card-row">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.82rem; font-weight:800; color:var(--text-main);">${dork.title}</span>
-            <span class="meta-pill" style="font-size:0.65rem;">Google Dork</span>
-          </div>
-          <p style="font-size:0.75rem; color:var(--text-muted);">${dork.tip}</p>
-          <div class="dork-syntax-box">
-            <code style="word-break:break-all;">${compiledSyntax}</code>
-            <div style="display:flex; gap:0.4rem; flex-shrink:0;">
-              <button class="btn-header" style="padding:0.25rem 0.5rem; font-size:0.7rem;" data-copy-dork="${encodeURIComponent(compiledSyntax)}">
-                Copiar
-              </button>
-              <a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" class="btn-header primary" style="padding:0.25rem 0.5rem; font-size:0.7rem;">
-                Abrir en Google ↗
-              </a>
+        <div style="background:var(--bg-elevated); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:0.75rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-bottom:0.35rem;">
+            <strong style="font-size:0.8rem; color:var(--text-primary);">${dork.title}</strong>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn-tactical" data-copy-dork="${this.escapeHtml(finalSyntax)}" style="padding:0.2rem 0.5rem; font-size:0.68rem;">Copiar</button>
+              <a href="${googleUrl}" target="_blank" rel="noopener noreferrer" class="btn-tactical primary" style="padding:0.2rem 0.5rem; font-size:0.68rem;">Abrir en Google ↗</a>
             </div>
           </div>
+          <code class="font-mono" style="display:block; font-size:0.72rem; color:var(--accent-cyan); background:var(--bg-surface); padding:0.45rem 0.65rem; border-radius:var(--radius-sm); border:1px solid var(--border-subtle); word-break:break-all;">
+            ${this.escapeHtml(finalSyntax)}
+          </code>
+          <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.35rem;">💡 ${dork.tip}</p>
         </div>
       `;
     }).join("");
 
-    // Listeners para copiar dorks
     this.dom.dorkResultsList.querySelectorAll("[data-copy-dork]").forEach(btn => {
       btn.addEventListener("click", () => {
-        const text = decodeURIComponent(btn.dataset.copyDork);
-        this.copyToClipboard(text, "Sintaxis de Google Dork copiada");
+        this.copyToClipboard(btn.dataset.copyDork, "Dork copiado al portapapeles");
       });
     });
   }
 
   openCaseExportModal() {
-    const favsList = OSINT_TOOLS.filter(t => this.state.favorites.has(t.id));
+    const favs = OSINT_TOOLS.filter(t => this.state.favorites.has(t.id));
+    const now = new Date().toISOString().slice(0, 10);
 
-    if (favsList.length === 0) {
-      this.showToast("Marca primero herramientas con ★ para exportar tu kit de investigación", "info");
-      return;
-    }
+    let md = `# Expediente de Ciberinteligencia OSINT\n`;
+    md += `Fecha de Generación: ${now}\n`;
+    md += `Recursos Seleccionados: ${favs.length}\n`;
+    md += `Estándar Metodológico: Gauntlet Loop v3.0\n\n`;
+    md += `| Recurso | Categoría | Coste | OPSEC | URL |\n`;
+    md += `| :--- | :--- | :--- | :--- | :--- |\n`;
 
-    const markdownReport = `
-# EXPEDIENTE OSINT - KIT DE HERRAMIENTAS SELECCIONADAS
-Generado el: ${new Date().toLocaleDateString('es-ES')}
-Total de herramientas activas: ${favsList.length}
+    favs.forEach(t => {
+      md += `| ${t.name} | ${t.categoryLabel} | ${t.cost} | ${t.opsec} | ${t.url} |\n`;
+    });
 
-${favsList.map((t, idx) => `
-### ${idx + 1}. [${t.name}](${t.url})
-- **Categoría:** ${t.categoryLabel}
-- **Coste:** ${t.cost} | **Nivel:** ${t.level} | **OPSEC:** ${t.opsec}
-- **Función Principal:** ${t.summary}
-- **Tip Operativo:** ${t.practicalTip}
-`).join("\n---\n")}
-    `.trim();
+    md += `\n## Fichas de Recursos con Consejos de Campo\n\n`;
+    favs.forEach(t => {
+      md += `### ${t.name}\n`;
+      md += `- **URL:** ${t.url}\n`;
+      md += `- **Resumen:** ${t.summary}\n`;
+      md += `- **Tip Operativo:** ${t.practicalTip}\n\n`;
+    });
 
-    this.dom.caseExportContent.value = markdownReport;
-    this.dom.caseExportModal.classList.add("is-open");
+    this.dom.caseExportTextarea.value = md;
+    this.openModal(this.dom.caseExportModal);
+  }
+
+  openWorkflowsModal() {
+    this.renderWorkflowWidget();
+    this.openModal(this.dom.workflowsModal);
+  }
+
+  openModal(modal) {
+    if (!modal) return;
+    this.closeAllModals();
+    modal.classList.add("is-active");
+    document.body.classList.add("modal-open");
   }
 
   closeAllModals() {
-    document.querySelectorAll(".modal-backdrop").forEach(m => m.classList.remove("is-open"));
+    document.querySelectorAll(".modal-backdrop").forEach(m => m.classList.remove("is-active"));
+    document.body.classList.remove("modal-open");
   }
 
-  // ==================== FAVORITOS & ESTADO ====================
+  // ==================== FAVORITOS Y DESCARGAS ====================
 
   toggleFavorite(toolId) {
     if (this.state.favorites.has(toolId)) {
       this.state.favorites.delete(toolId);
-      this.showToast("Eliminado de tu kit de investigación", "info");
+      this.showToast("Recurso eliminado de favoritos", "info");
     } else {
       this.state.favorites.add(toolId);
-      this.showToast("Añadido a tus favoritos ★", "success");
+      this.showToast("Recurso guardado en favoritos ★", "success");
     }
 
-    localStorage.setItem("osint_favs_v2", JSON.stringify(Array.from(this.state.favorites)));
+    localStorage.setItem("osint_favs_v3", JSON.stringify([...this.state.favorites]));
     this.updateCounters();
     this.renderTools();
   }
 
   updateCounters() {
     this.dom.favBadgeCount.textContent = this.state.favorites.size;
-    const tickerLeft = document.querySelector(".top-ticker-left span:last-child");
-    if (tickerLeft) {
-      tickerLeft.textContent = `OSINT Hub Español • ${OSINT_TOOLS.length} Herramientas verificadas y categorizadas para analistas tácticos`;
-    }
-    const heroMetricVal = document.querySelector(".hero-metrics .metric-val");
-    if (heroMetricVal) {
-      heroMetricVal.textContent = `${OSINT_TOOLS.length}+`;
-    }
-  }
-
-  switchView(mode) {
-    this.state.viewMode = mode;
-    localStorage.setItem("osint_view_mode", mode);
-    this.dom.viewGridBtn.classList.toggle("active", mode === "grid");
-    this.dom.viewTableBtn.classList.toggle("active", mode === "table");
-    this.renderTools();
   }
 
   resetAllFilters() {
@@ -690,10 +724,11 @@ ${favsList.map((t, idx) => `
     this.state.opsec = "todos";
     this.state.search = "";
     this.state.onlyFavorites = false;
+    this.state.workflowFilter = null;
 
     this.dom.searchInput.value = "";
     this.dom.clearSearchBtn.style.display = "none";
-    this.dom.favToggleBtn.classList.remove("primary");
+    this.dom.favToggleBtn.classList.remove("active");
 
     document.querySelectorAll("[data-filter-cost]").forEach(b => {
       b.classList.toggle("active", b.dataset.filterCost === "todos");
@@ -708,85 +743,125 @@ ${favsList.map((t, idx) => `
     this.syncUrlHash();
     this.renderCategoryNav();
     this.renderTools();
+    this.showToast("Filtros restablecidos", "info");
   }
 
-  // ==================== UTILIDADES ====================
+  // Feedback en línea con tooltip "¡Copiado!" sobre el botón
+  copyUrlWithInlineFeedback(button, url) {
+    navigator.clipboard.writeText(url).then(() => {
+      const tooltip = document.createElement("span");
+      tooltip.className = "copied-tooltip";
+      tooltip.textContent = "¡Copiado!";
+      button.appendChild(tooltip);
 
-  copyToClipboard(text, msg = "Copiado al portapapeles") {
+      setTimeout(() => tooltip.remove(), 1200);
+      this.showToast("Enlace copiado al portapapeles", "success");
+    }).catch(() => {
+      this.showToast("No se pudo copiar el enlace", "error");
+    });
+  }
+
+  copyToClipboard(text, msg) {
     navigator.clipboard.writeText(text).then(() => {
       this.showToast(msg, "success");
     }).catch(() => {
-      this.showToast("No se pudo copiar automáticamente", "info");
+      this.showToast("Error al copiar al portapapeles", "error");
     });
+  }
+
+  downloadFile(filename, text, mimeType) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 150);
+    this.showToast(`Descargado: ${filename}`, "success");
+  }
+
+  downloadCsvFile() {
+    const favs = OSINT_TOOLS.filter(t => this.state.favorites.has(t.id));
+    let csv = "ID,Nombre,Categoria,Coste,Nivel,OPSEC,URL,Tip\n";
+
+    favs.forEach(t => {
+      const escape = s => `"${(s || '').replace(/"/g, '""')}"`;
+      csv += `${escape(t.id)},${escape(t.name)},${escape(t.categoryLabel)},${escape(t.cost)},${escape(t.level)},${escape(t.opsec)},${escape(t.url)},${escape(t.practicalTip)}\n`;
+    });
+
+    this.downloadFile("kit-osint.csv", csv, "text/csv;charset=utf-8;");
   }
 
   showToast(message, type = "success") {
     const toast = document.createElement("div");
     toast.className = "toast";
-    toast.innerHTML = `
-      <span class="toast-icon">${type === 'success' ? '✓' : '★'}</span>
-      <span>${message}</span>
-    `;
-
+    const icon = type === "success" ? "✓" : (type === "info" ? "ℹ" : "✕");
+    toast.innerHTML = `<span style="color:${type === 'success' ? 'var(--accent-emerald)' : 'var(--accent-cyan)'}; font-weight:800;">${icon}</span> <span>${message}</span>`;
+    
     this.dom.toastContainer.appendChild(toast);
-    setTimeout(() => toast.classList.add("show"), 10);
-
     setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 250);
-    }, 2800);
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(8px)";
+      toast.style.transition = "all 0.2s ease";
+      setTimeout(() => toast.remove(), 200);
+    }, 2400);
   }
+
+  // ==================== URL HASH & HISTORIAL SIN SPAM ====================
 
   syncUrlHash() {
     const params = new URLSearchParams();
-    if (this.state.category !== "todas") params.set("cat", this.state.category);
     if (this.state.search) params.set("q", this.state.search);
+    if (this.state.category !== "todas") params.set("cat", this.state.category);
 
-    const hashString = params.toString();
-    window.location.hash = hashString ? `#${hashString}` : "";
+    const hashStr = params.toString();
+    const newUrl = hashStr ? `#${hashStr}` : window.location.pathname;
+    // Usa replaceState para NO ensuciar el historial de navegación
+    history.replaceState(null, "", newUrl);
   }
 
   parseUrlHash() {
     if (!window.location.hash) return;
-    const cleanHash = window.location.hash.replace(/^#/, "");
-    const params = new URLSearchParams(cleanHash);
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+
+    if (params.has("q")) {
+      this.state.search = params.get("q").toLowerCase();
+      this.dom.searchInput.value = this.state.search;
+      this.dom.clearSearchBtn.style.display = "flex";
+    }
 
     if (params.has("cat")) {
       this.state.category = params.get("cat");
     }
-    if (params.has("q")) {
-      this.state.search = params.get("q").toLowerCase();
-      this.dom.searchInput.value = params.get("q");
-      this.dom.clearSearchBtn.style.display = "flex";
-    }
+  }
+
+  highlightMatch(text) {
+    if (!this.state.search) return text;
+    const tokens = this.state.search.split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return text;
+
+    let pattern = tokens.map(t => this.escapeRegex(t)).join("|");
+    const regex = new RegExp(`(${pattern})`, "gi");
+    return text.replace(regex, `<mark style="background:rgba(56, 189, 248, 0.25); color:inherit; border-radius:2px; padding:0 2px;">$1</mark>`);
+  }
+
+  escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
   }
 }
 
 // Inicializar la aplicación al cargar el DOM
 document.addEventListener("DOMContentLoaded", () => {
-  window.app = new OsintHubApp();
-
-  // Listeners globales para modales
-  document.getElementById("btn-open-dork-builder")?.addEventListener("click", () => {
-    window.app.openDorkModal();
-  });
-
-  document.getElementById("btn-export-dossier")?.addEventListener("click", () => {
-    window.app.openCaseExportModal();
-  });
-
-  document.querySelectorAll("[data-close-modal]").forEach(btn => {
-    btn.addEventListener("click", () => window.app.closeAllModals());
-  });
-
-  document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) window.app.closeAllModals();
-    });
-  });
-
-  document.getElementById("btn-copy-case-markdown")?.addEventListener("click", () => {
-    const text = document.getElementById("case-export-textarea").value;
-    window.app.copyToClipboard(text, "Expediente copiado en formato Markdown");
-  });
+  new OsintHubApp();
 });
