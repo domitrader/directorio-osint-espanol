@@ -134,6 +134,21 @@ class OsintHubApp {
       });
     }
 
+    // Toggle de Workflows en móvil
+    const heroToggleBtn = document.getElementById("btn-toggle-hero-workflows");
+    const heroContent = document.getElementById("hero-collapsible-content");
+    const heroArrow = document.getElementById("hero-toggle-arrow");
+
+    if (heroToggleBtn && heroContent) {
+      heroToggleBtn.addEventListener("click", () => {
+        const isExpanded = heroContent.classList.toggle("is-expanded");
+        heroToggleBtn.setAttribute("aria-expanded", isExpanded);
+        if (heroArrow) {
+          heroArrow.textContent = isExpanded ? "▴" : "▾";
+        }
+      });
+    }
+
     // Modal Dorks Target Input
     if (this.dom.dorkTargetInput) {
       this.dom.dorkTargetInput.addEventListener("input", () => {

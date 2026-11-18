@@ -52,9 +52,28 @@
             OSINT Hub
             <span class="tag-es">Español</span>
           </h1>
-          <p>Directorio de Inteligencia y Metodología Táctica</p>
+          <p class="brand-tagline">Directorio de Inteligencia Táctica</p>
         </div>
       </div>
+
+      <!-- Acciones de Cabecera -->
+      <nav class="header-actions" aria-label="Acciones de navegación rápida">
+        <button id="btn-toggle-favs-view" class="btn-header" title="Ver recursos guardados" aria-label="Ver recursos guardados">
+          <span style="color:#f59e0b;">★</span>
+          <span class="btn-text">Favoritos</span>
+          <span id="favs-count-badge" class="fav-counter-pill">0</span>
+        </button>
+
+        <button id="btn-open-dork-builder" class="btn-header primary" title="Constructor interactivo de Google Dorks" aria-label="Abrir constructor de Google Dorks">
+          <span>⚡</span>
+          <span class="btn-text">Dorks</span>
+        </button>
+
+        <button id="btn-export-dossier" class="btn-header" title="Exportar kit de investigación en Markdown" aria-label="Exportar expediente">
+          <span>📁</span>
+          <span class="btn-text">Kit</span>
+        </button>
+      </nav>
 
       <!-- Barra de Búsqueda Omnipresente -->
       <div class="search-container">
@@ -64,7 +83,7 @@
             type="search" 
             id="main-search" 
             class="main-search-input" 
-            placeholder="Buscar por herramienta, objetivo (ej. email, satélite, Shodan, dork)..." 
+            placeholder="Buscar herramienta, dominio, satélite, IP, personas..." 
             autocomplete="off"
             aria-label="Buscar en el catálogo de herramientas OSINT"
           >
@@ -74,23 +93,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Acciones de Cabecera -->
-      <nav class="header-actions" aria-label="Acciones de navegación rápida">
-        <button id="btn-toggle-favs-view" class="btn-header" title="Ver recursos guardados" aria-label="Ver recursos guardados">
-          <span style="color:#f59e0b;">★</span>
-          <span>Mis Favoritos</span>
-          <span id="favs-count-badge" class="fav-counter-pill">0</span>
-        </button>
-
-        <button id="btn-open-dork-builder" class="btn-header primary" title="Constructor interactivo de Google Dorks" aria-label="Abrir constructor de Google Dorks">
-          <span>⚡ Dork Builder</span>
-        </button>
-
-        <button id="btn-export-dossier" class="btn-header" title="Exportar kit de investigación en Markdown" aria-label="Exportar expediente">
-          <span>📁 Exportar Kit</span>
-        </button>
-      </nav>
     </div>
   </header>
 
@@ -99,7 +101,20 @@
 
     <!-- HERO DASHBOARD: METODOLOGÍA & WORKFLOWS -->
     <section class="hero-dashboard" aria-labelledby="hero-title">
-      <div class="hero-grid">
+      <!-- Barra compacta visible en móviles -->
+      <div class="hero-mobile-bar">
+        <div class="hero-mobile-summary">
+          <span class="status-dot"></span>
+          <span><strong>OSINT Hub Español</strong> &bull; 85 herramientas</span>
+        </div>
+        <button id="btn-toggle-hero-workflows" class="btn-hero-toggle" aria-expanded="false" aria-controls="hero-collapsible-content">
+          <span>⚡ Ver Metodologías</span>
+          <span id="hero-toggle-arrow">▾</span>
+        </button>
+      </div>
+
+      <!-- Contenido completo colapsable en móvil y expandido en escritorio -->
+      <div id="hero-collapsible-content" class="hero-grid">
         <div class="hero-text">
           <h2 id="hero-title">
             Inteligencia de Fuentes Abiertas <br>
@@ -112,20 +127,20 @@
 
           <div class="hero-metrics">
             <div class="metric-item">
-              <span class="metric-val">90+</span>
+              <span class="metric-val">85</span>
               <span class="metric-label">Recursos Verificados</span>
             </div>
-            <div style="width:1px; height:32px; background:var(--border-subtle);" aria-hidden="true"></div>
+            <div class="metric-divider" aria-hidden="true"></div>
             <div class="metric-item">
               <span class="metric-val">14</span>
               <span class="metric-label">Dominios de Análisis</span>
             </div>
-            <div style="width:1px; height:32px; background:var(--border-subtle);" aria-hidden="true"></div>
+            <div class="metric-divider" aria-hidden="true"></div>
             <div class="metric-item">
               <span class="metric-val">100%</span>
               <span class="metric-label">En Español</span>
             </div>
-            <div style="width:1px; height:32px; background:var(--border-subtle);" aria-hidden="true"></div>
+            <div class="metric-divider" aria-hidden="true"></div>
             <div class="metric-item">
               <span class="metric-val">0 ms</span>
               <span class="metric-label">Búsqueda Reactiva</span>
